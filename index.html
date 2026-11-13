@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenResearch Hub</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1b2030;--mu:#6b7285;--pr:#2f5bea;--bd:#e3e6ef}
+@media(prefers-color-scheme:dark){:root{--bg:#12151f;--card:#1b2030;--tx:#e8ebf5;--mu:#9aa2b8;--pr:#6d8cff;--bd:#2b3248}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+button,input,select{font:inherit}input,select{padding:10px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);width:100%}
+button{cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:10px 14px;border-radius:8px}
+button.p{background:var(--pr);color:#fff;border-color:var(--pr)}
+.box{max-width:420px;margin:6vh auto;padding:24px;background:var(--card);border:1px solid var(--bd);border-radius:14px}
+.box>*{margin-bottom:10px}.box button{width:100%}.mu{color:var(--mu);font-size:13px}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:var(--card);border-bottom:1px solid var(--bd);position:sticky;top:0}
+main{max-width:900px;margin:auto;padding:18px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.row>input{flex:1;min-width:180px}.row>select{width:auto}
+.tabs button.on{background:var(--pr);color:#fff}
+.item{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px}
+.item h3{margin:0 0 4px;font-size:16px}.item a{color:var(--pr);text-decoration:none}
+.tag{font-size:12px;background:var(--bg);border:1px solid var(--bd);border-radius:20px;padding:2px 8px;margin-right:6px}
+#err{color:#d33;font-size:13px}
+</style></head><body>
+
+<section id="login" class="box">
+  <h2 style="margin:0">🔬 OpenResearch Hub</h2>
+  <p class="mu">Open research papers, datasets and preprints in one place.</p>
+  <input id="em" type="email" placeholder="Email">
+  <input id="pw" type="password" placeholder="Password (min 6 chars)">
+  <button class="p" id="b-login">Log in</button>
+  <button id="b-signup">Create account</button>
+  <div class="mu" style="text-align:center">— or continue with —</div>
+  <button id="b-google">Google</button>
+  <button id="b-github">GitHub</button>
+  <button id="b-orcid">ORCID</button>
+  <button id="b-openai">OpenAI</button>
+  <button id="b-anon">Continue anonymously</button>
+  <div id="err"></div>
+  <div class="mu" id="mode"></div>
+</section>
+
+<div id="app" hidden>
+  <header><b>🔬 OpenResearch Hub</b><span><span class="mu" id="who"></span> <button id="b-out">Log out</button></span></header>
+  <main>
+    <div class="row tabs">
+      <button data-v="search" class="on">Search</button>
+      <button data-v="lib">My library</button>
+    </div>
+    <div id="v-search">
+      <div class="row">
+        <input id="q" placeholder="Search papers, datasets, preprints…">
+        <select id="src">
+          <option value="openalex">OpenAlex (250M+ works)</option>
+          <option value="arxiv">arXiv</option>
+          <option value="zenodo">Zenodo</option>
+          <option value="crossref">Crossref</option>
+        </select>
+        <button class="p" id="go">Search</button>
+      </div>
+      <div class="row">
+        <button id="g-google">Search on Google</button>
+        <button id="g-scholar">Google Scholar</button>
+        <button id="g-chrome">Open in new Chrome tab</button>
+      </div>
+      <div id="res" class="mu">Type a topic and press Search.</div>
+    </div>
+    <div id="v-lib" hidden><div id="lib"></div></div>
+  </main>
+</div>
+
+<script type="module">
+/* ====== 1) PASTE YOUR FIREBASE CONFIG HERE (Firebase console > Project settings) ====== */
+const FIREBASE_CONFIG = { apiKey:"YOUR_API_KEY", authDomain:"YOUR_APP.firebaseapp.com", projectId:"YOUR_APP", appId:"YOUR_APP_ID" };
+/* ================================================================================= */
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DEMO = FIREBASE_CONFIG.apiKey === "YOUR_API_KEY";
+let user = null, last = [], fb = {}, auth;
+
+/* ---------- AUTH ---------- */
+async function boot() {
+  if (DEMO) {
+    $("mode").textContent = "Demo mode: add your Firebase config to enable real, secure login.";
+    const u = localStorage.getItem("demo_user");
+    if (u) enter(JSON.parse(u));
+    return;
+  }
+  const A = "https://www.gstatic.com/firebasejs/10.12.0/";
+  const { initializeApp } = await import(A + "firebase-app.js");
+  fb = await import(A + "firebase-auth.js");
+  auth = fb.getAuth(initializeApp(FIREBASE_CONFIG));
+  fb.onAuthStateChanged(auth, u => u ? enter({ uid: u.uid, name: u.displayName || u.email || "Anonymous guest" }) : leave());
+}
+function enter(u) { user = u; $("login").hidden = true; $("app").hidden = false; $("who").textContent = u.name; renderLib(); }
+function leave() { user = null; $("login").hidden = false; $("app").hidden = true; }
+const fail = e => $("err").textContent = (e.code || e.message || e).toString();
+
+async function run(fnDemo, fnReal) {
+  $("err").textContent = "";
+  try {
+    if (DEMO) { const u = fnDemo(); localStorage.setItem("demo_user", JSON.stringify(u)); enter(u); }
+    else await fnReal();
+  } catch (e) { fail(e); }
+}
+const social = (make) => () => run(() => ({ uid: "demo", name: "Demo user" }), () => fb.signInWithPopup(auth, make()));
+$("b-login").onclick  = () => run(() => ({ uid: "demo", name: $("em").value || "Demo user" }), () => fb.signInWithEmailAndPassword(auth, $("em").value, $("pw").value));
+$("b-signup").onclick = () => run(() => ({ uid: "demo", name: $("em").value || "Demo user" }), () => fb.createUserWithEmailAndPassword(auth, $("em").value, $("pw").value));
+$("b-anon").onclick   = () => run(() => ({ uid: "anon", name: "Anonymous guest" }), () => fb.signInAnonymously(auth));
+$("b-google").onclick = social(() => new fb.GoogleAuthProvider());
+$("b-github").onclick = social(() => new fb.GithubAuthProvider());
+$("b-orcid").onclick  = social(() => new fb.OAuthProvider("oidc.orcid"));   // enable "OpenID Connect" provider id oidc.orcid in Firebase
+$("b-openai").onclick = social(() => new fb.OAuthProvider("oidc.openai"));  // only works if OpenAI gives you an OIDC client
+$("b-out").onclick = async () => { localStorage.removeItem("demo_user"); if (!DEMO) await fb.signOut(auth); else leave(); };
+
+/* ---------- SEARCH ---------- */
+const SRC = {
+  async openalex(q) {
+    const j = await (await fetch("https://api.openalex.org/works?per-page=15&search=" + encodeURIComponent(q))).json();
+    return j.results.map(w => ({ title: w.display_name, authors: w.authorships.slice(0, 4).map(a => a.author.display_name).join(", "),
+      year: w.publication_year, venue: w.primary_location?.source?.display_name || "", link: w.open_access?.oa_url || w.doi || w.id, src: "OpenAlex" }));
+  },
+  async arxiv(q) {
+    const t = await (await fetch("https://export.arxiv.org/api/query?max_results=15&search_query=all:" + encodeURIComponent(q))).text();
+    return [...new DOMParser().parseFromString(t, "text/xml").querySelectorAll("entry")].map(e => ({
+      title: e.querySelector("title").textContent.trim(), authors: [...e.querySelectorAll("author name")].slice(0, 4).map(n => n.textContent).join(", "),
+      year: e.querySelector("published").textContent.slice(0, 4), venue: "arXiv preprint", link: e.querySelector("id").textContent, src: "arXiv" }));
+  },
+  async zenodo(q) {
+    const j = await (await fetch("https://zenodo.org/api/records?size=15&q=" + encodeURIComponent(q))).json();
+    return j.hits.hits.map(h => ({ title: h.metadata.title, authors: (h.metadata.creators || []).slice(0, 4).map(c => c.name).join(", "),
+      year: (h.metadata.publication_date || "").slice(0, 4), venue: h.metadata.resource_type?.title || "Zenodo", link: h.links.self_html, src: "Zenodo" }));
+  },
+  async crossref(q) {
+    const j = await (await fetch("https://api.crossref.org/works?rows=15&query=" + encodeURIComponent(q))).json();
+    return j.message.items.map(i => ({ title: (i.title || ["Untitled"])[0], authors: (i.author || []).slice(0, 4).map(a => (a.given || "") + " " + (a.family || "")).join(", "),
+      year: i.issued?.["date-parts"]?.[0]?.[0] || "", venue: (i["container-title"] || [""])[0], link: "https://doi.org/" + i.DOI, src: "Crossref" }));
+  }
+};
+function card(r, i, saved) {
+  return `<div class="item"><h3><a href="${esc(r.link)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a></h3>
+  <div class="mu">${esc(r.authors)}</div><div style="margin:8px 0"><span class="tag">${esc(r.src)}</span><span class="tag">${esc(r.year)}</span><span class="mu">${esc(r.venue)}</span></div>
+  <button data-i="${i}" class="${saved ? "rm" : "sv"}">${saved ? "Remove" : "★ Save"}</button></div>`;
+}
+async function search() {
+  const q = $("q").value.trim(); if (!q) return;
+  $("res").textContent = "Searching…";
+  try { last = await SRC[$("src").value](q); $("res").innerHTML = last.length ? last.map((r, i) => card(r, i, false)).join("") : "No results."; }
+  catch (e) { $("res").textContent = "Search failed (open this file via https/hosting, not from a sandbox): " + e.message; }
+}
+$("go").onclick = search; $("q").onkeydown = e => e.key === "Enter" && search();
+const gq = () => encodeURIComponent($("q").value || "open research");
+$("g-google").onclick = () => open("https://www.google.com/search?q=" + gq(), "_blank", "noopener");
+$("g-scholar").onclick = () => open("https://scholar.google.com/scholar?q=" + gq(), "_blank", "noopener");
+$("g-chrome").onclick = () => open("https://www.google.com/search?q=" + gq() + "+filetype:pdf", "_blank", "noopener");
+
+/* ---------- LIBRARY (per user, localStorage; swap for Firestore for cloud sync) ---------- */
+const key = () => "lib_" + (user?.uid || "x");
+const getLib = () => { try { return JSON.parse(localStorage.getItem(key()) || "[]"); } catch { return []; } };
+const setLib = l => { try { localStorage.setItem(key(), JSON.stringify(l)); } catch {} };
+function renderLib() { const l = getLib(); $("lib").innerHTML = l.length ? l.map((r, i) => card(r, i, true)).join("") : '<p class="mu">Nothing saved yet.</p>'; }
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.v) { document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
+    $("v-search").hidden = b.dataset.v !== "search"; $("v-lib").hidden = b.dataset.v !== "lib"; renderLib(); }
+  if (b.classList.contains("sv")) { const l = getLib(); l.push(last[b.dataset.i]); setLib(l); b.textContent = "Saved ✓"; }
+  if (b.classList.contains("rm")) { const l = getLib(); l.splice(b.dataset.i, 1); setLib(l); renderLib(); }
+});
+boot();
+</script>
+</body></html>
