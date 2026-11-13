@@ -1,380 +1,341 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SciNexus - Open Research Repository & Journal (Zenodo Style)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SciNexus – Open Research Repository</title>
+<meta name="description" content="SciNexus: open research papers, datasets and preprints. Search, upload and share research.">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
-    <!-- ================= 1. LOGIN SCREEN ================= -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white max-w-md w-full p-8 rounded-2xl shadow-xl border border-slate-200">
-            <div class="text-center mb-6">
-                <div class="inline-block bg-blue-600 text-white p-3 rounded-xl text-2xl mb-2">🔬</div>
-                <h1 class="text-2xl font-extrabold text-slate-900">SciNexus Hub</h1>
-                <p class="text-sm text-slate-500 mt-1">Zenodo Style Open Research Repository</p>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">ईमेल (Email)</label>
-                    <input type="email" id="email" placeholder="example@gmail.com" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">पासवर्ड (Password)</label>
-                    <input type="password" id="password" placeholder="••••••••" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div class="pt-2 flex flex-col gap-2">
-                    <button onclick="login()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition shadow-md">लॉगिन करें</button>
-                    <button onclick="signUp()" class="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 transition">नया खाता बनाएं</button>
-                </div>
-            </div>
-        </div>
+<header class="bg-blue-900 text-white sticky top-0 z-20">
+  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+    <a href="#" onclick="go('search');return false" class="font-extrabold text-lg">🔬 SciNexus</a>
+    <div class="flex items-center gap-2 text-xs">
+      <span id="who" class="hidden sm:inline text-blue-200"></span>
+      <button id="login-btn" onclick="openLogin()" class="bg-white text-blue-900 px-3 py-1.5 rounded-lg font-bold">Login</button>
+      <button id="logout-btn" onclick="auth.signOut()" class="hidden bg-red-500 px-3 py-1.5 rounded-lg font-bold">Logout</button>
     </div>
-
-    <!-- ================= 2. DASHBOARD SCREEN ================= -->
-    <div id="dashboard-screen" class="hidden min-h-screen flex flex-col">
-        <header class="bg-blue-900 text-white shadow-md sticky top-0 z-10">
-            <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <span class="text-xl">🔬</span>
-                    <h1 class="text-lg font-extrabold tracking-wide">SciNexus Repository</h1>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span id="user-email-display" class="text-xs bg-blue-950 px-3 py-1.5 rounded-full text-blue-200 hidden sm:inline"></span>
-                    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">लॉग आउट</button>
-                </div>
-            </div>
-            <nav class="bg-blue-950 px-4 overflow-x-auto">
-                <div class="max-w-6xl mx-auto flex gap-1 text-xs sm:text-sm font-semibold">
-                    <button onclick="switchTab('discover')" id="tab-discover" class="tab-btn px-4 py-3 border-b-2 border-white text-white whitespace-nowrap">🔍 ग्लोबल खोज (Search)</button>
-                    <button onclick="switchTab('library')" id="tab-library" class="tab-btn px-4 py-3 border-b-2 border-transparent text-blue-300 hover:text-white whitespace-nowrap">📚 मेरी लाइब्रेरी</button>
-                    <button onclick="switchTab('submit')" id="tab-submit" class="tab-btn px-4 py-3 border-b-2 border-transparent text-blue-300 hover:text-white whitespace-nowrap">📤 रिसर्च अपलोड करें</button>
-                    <button onclick="switchTab('community')" id="tab-community" class="tab-btn px-4 py-3 border-b-2 border-transparent text-blue-300 hover:text-white whitespace-nowrap">🌐 कम्युनिटी फीड</button>
-                </div>
-            </nav>
-        </header>
-
-        <main class="max-w-5xl w-full mx-auto p-4 sm:p-6 flex-grow">
-
-            <!-- TAB 1: DISCOVER & GLOBAL SEARCH -->
-            <div id="view-discover" class="view-section space-y-4">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h2 class="text-lg font-bold text-slate-800 mb-1">ग्लोबल रिसर्च और जर्नल्स खोजें</h2>
-                    <p class="text-xs text-slate-500 mb-4">दुनियाभर के ओपन-एक्सेस रिसर्च डेटाबेस से पेपर्स खोजें।</p>
-                    <div class="flex gap-2">
-                        <input type="text" id="search-query" placeholder="कीवर्ड लिखें (जैसे: AI, Black Holes, Medicine)..." class="w-full p-3 border border-slate-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                        <button onclick="searchResearch()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition">सर्च</button>
-                    </div>
-                </div>
-                <div id="search-results" class="space-y-3"></div>
-            </div>
-
-            <!-- TAB 2: MY LIBRARY -->
-            <div id="view-library" class="view-section hidden space-y-4">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <h2 class="text-lg font-bold text-slate-800">📚 मेरी पर्सनल क्लाउड लाइब्रेरी</h2>
-                            <p class="text-xs text-slate-500">आपके सेव किए गए पेपर्स। किसी भी पेपर पर क्लिक करके उसका पूरा विवरण देखें।</p>
-                        </div>
-                        <button onclick="switchTab('submit')" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold">+ नया जोड़ें</button>
-                    </div>
-                    <div id="my-papers-list" class="space-y-3">
-                        <p class="text-sm text-slate-400">लोड हो रहा है...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 3: SUBMIT RESEARCH (Zenodo Style) -->
-            <div id="view-submit" class="view-section hidden">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-2xl mx-auto">
-                    <h2 class="text-lg font-bold text-slate-800 mb-1">📤 नया रिसर्च पेपर / डेटासेट अपलोड करें</h2>
-                    <p class="text-xs text-slate-500 mb-5">कम्युनिटी और अपनी लाइब्रेरी में रिसर्च पब्लिश करें।</p>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">रिसर्च का शीर्षक (Title) *</label>
-                            <input type="text" id="sub-title" placeholder="शीर्षक दर्ज करें..." class="w-full p-2.5 border rounded-xl text-sm">
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">लेखक (Authors) *</label>
-                                <input type="text" id="sub-authors" placeholder="लेखकों के नाम..." class="w-full p-2.5 border rounded-xl text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">विषय (Category)</label>
-                                <select id="sub-category" class="w-full p-2.5 border rounded-xl text-sm bg-white">
-                                    <option value="Physics & Mathematics">Physics & Mathematics</option>
-                                    <option value="Computer Science & AI">Computer Science & AI</option>
-                                    <option value="Chemistry & Biology">Chemistry & Biology</option>
-                                    <option value="General Research">General Research</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">सारांश (Abstract / Description) *</label>
-                            <textarea id="sub-abstract" rows="4" placeholder="रिसर्च का सारांश विस्तार से लिखें..." class="w-full p-2.5 border rounded-xl text-sm"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">ऑरिजिनल पेपर / PDF / DOI लिंक *</label>
-                            <input type="url" id="sub-link" placeholder="https://doi.org/... या PDF लिंक" class="w-full p-2.5 border rounded-xl text-sm">
-                        </div>
-                        <button onclick="submitNewResearch()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-green-700 transition shadow">🚀 पब्लिश करें</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 4: COMMUNITY FEED -->
-            <div id="view-community" class="view-section hidden space-y-4">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h2 class="text-lg font-bold text-slate-800 mb-1">🌐 SciNexus कम्युनिटी रिपॉजिटरी</h2>
-                    <p class="text-xs text-slate-500 mb-4">शोधकर्ताओं द्वारा सार्वजनिक रूप से साझा किए गए पेपर्स।</p>
-                    <div id="community-list" class="space-y-3">
-                        <p class="text-sm text-slate-400">कम्युनिटी डेटा लोड हो रहा है...</p>
-                    </div>
-                </div>
-            </div>
-
-        </main>
+  </div>
+  <nav class="bg-blue-950 overflow-x-auto">
+    <div class="max-w-5xl mx-auto flex text-xs sm:text-sm font-semibold whitespace-nowrap">
+      <button data-nav="search" onclick="go('search')" class="px-4 py-3">🔍 खोज (Search)</button>
+      <button data-nav="lib" onclick="go('lib')" class="px-4 py-3">📚 मेरी लाइब्रेरी</button>
+      <button data-nav="up" onclick="go('up')" class="px-4 py-3">📤 अपलोड</button>
+      <button data-nav="com" onclick="go('com')" class="px-4 py-3">🌐 कम्युनिटी</button>
     </div>
+  </nav>
+</header>
 
-    <!-- ================= PAPER DETAILS MODAL ================= -->
-    <div id="paper-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white max-w-lg w-full p-6 rounded-2xl shadow-2xl space-y-4 relative">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-            <span id="modal-cat" class="text-[10px] font-bold uppercase bg-blue-100 text-blue-800 px-2 py-0.5 rounded"></span>
-            <h3 id="modal-title" class="font-bold text-lg text-slate-900"></h3>
-            <p id="modal-authors" class="text-xs text-slate-600 font-medium"></p>
-            <div class="bg-slate-50 p-3 rounded-xl border text-xs text-slate-700 max-h-48 overflow-y-auto leading-relaxed" id="modal-abstract"></div>
-            <div id="modal-link-container" class="pt-2"></div>
-        </div>
+<main class="max-w-5xl mx-auto p-4">
+
+  <!-- SEARCH (public, no login needed) -->
+  <section id="v-search" class="view">
+    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+      <h1 class="text-xl font-extrabold">Open Research खोजें</h1>
+      <p class="text-xs text-slate-500 mb-3">OpenAlex, Zenodo, Crossref, Europe PMC और SciNexus — सारा रिज़ल्ट इसी साइट पर खुलेगा।</p>
+      <div class="flex gap-2">
+        <input id="q" placeholder="Topic, author, DOI… (जैसे: black holes, CRISPR)" class="w-full p-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        <button onclick="search()" class="bg-blue-600 text-white px-5 rounded-xl font-bold text-sm">सर्च</button>
+      </div>
+      <select id="srcf" class="mt-2 border rounded-lg p-2 text-xs bg-white">
+        <option value="all">सभी स्रोत (All sources)</option>
+        <option value="scinexus">SciNexus Community</option>
+        <option value="openalex">OpenAlex</option>
+        <option value="zenodo">Zenodo</option>
+        <option value="crossref">Crossref</option>
+        <option value="europepmc">Europe PMC</option>
+      </select>
     </div>
+    <div id="res" class="mt-4 space-y-3"></div>
+  </section>
 
-    <!-- ================= SCRIPT LOGIC ================= -->
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyC93VoM3Vq2hbnF9S6DojMJIMEtkUukU-g",
-            authDomain: "scinexus-1f5d1.firebaseapp.com",
-            projectId: "scinexus-1f5d1",
-            storageBucket: "scinexus-1f5d1.firebasestorage.app",
-            messagingSenderId: "701649637520",
-            appId: "1:701649637520:web:afae596028cbca4c884815",
-            measurementId: "G-3K4FM9LCH8"
-        };
+  <!-- DETAIL -->
+  <section id="v-rec" class="view hidden"></section>
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+  <!-- LIBRARY -->
+  <section id="v-lib" class="view hidden space-y-4">
+    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+      <h2 class="font-bold mb-1">⭐ सेव किए हुए पेपर्स (Cloud)</h2>
+      <p class="text-xs text-slate-500 mb-3">Search में "★ सेव" दबाने पर पूरा डेटा आपके Firebase क्लाउड में सेव होता है।</p>
+      <div id="lib-saved" class="space-y-3"></div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+      <h2 class="font-bold mb-3">📤 मेरे अपलोड किए रिकॉर्ड</h2>
+      <div id="lib-mine" class="space-y-3"></div>
+    </div>
+  </section>
 
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('dashboard-screen').classList.remove('hidden');
-                document.getElementById('user-email-display').innerText = user.email;
-                loadMyPapers(user.uid);
-                loadCommunityPapers();
-            } else {
-                document.getElementById('login-screen').classList.remove('hidden');
-                document.getElementById('dashboard-screen').classList.add('hidden');
-            }
-        });
+  <!-- UPLOAD (Zenodo style) -->
+  <section id="v-up" class="view hidden">
+    <div class="bg-white p-5 rounded-2xl border shadow-sm max-w-2xl mx-auto space-y-3">
+      <h2 class="text-lg font-bold">📤 नया अपलोड</h2>
+      <div><label class="lb">Files (PDF, ZIP, CSV… max 50MB) — वैकल्पिक</label><input id="u-file" type="file" class="inp"></div>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div><label class="lb">Resource type *</label>
+          <select id="u-type" class="inp bg-white"><option>Publication / Article</option><option>Preprint</option><option>Dataset</option><option>Software</option><option>Thesis</option><option>Poster</option><option>Presentation</option><option>Image</option><option>Video</option><option>Other</option></select></div>
+        <div><label class="lb">Publication date</label><input id="u-date" type="date" class="inp"></div>
+      </div>
+      <div><label class="lb">Title *</label><input id="u-title" class="inp"></div>
+      <div><label class="lb">Authors * (कॉमा या ; से अलग करें)</label><input id="u-authors" placeholder="Name Surname; Name Surname" class="inp"></div>
+      <div><label class="lb">Description / Abstract *</label><textarea id="u-desc" rows="5" class="inp"></textarea></div>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div><label class="lb">Keywords (कॉमा से)</label><input id="u-kw" class="inp"></div>
+        <div><label class="lb">DOI (अगर पहले से है, वैकल्पिक)</label><input id="u-doi" class="inp"></div>
+      </div>
+      <div><label class="lb">License</label>
+        <select id="u-lic" class="inp bg-white"><option>CC-BY-4.0</option><option>CC0-1.0</option><option>CC-BY-SA-4.0</option><option>CC-BY-NC-4.0</option><option>All rights reserved</option></select></div>
+      <label class="flex items-center gap-2 text-sm"><input id="u-pub" type="checkbox" checked> Public (सब देख सकें)</label>
+      <button id="u-btn" onclick="publish()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-sm">🚀 Publish</button>
+    </div>
+  </section>
 
-        function switchTab(tabName) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('border-white', 'text-white');
-                btn.classList.add('border-transparent', 'text-blue-300');
-            });
-            document.getElementById('view-' + tabName).classList.remove('hidden');
-            const activeBtn = document.getElementById('tab-' + tabName);
-            activeBtn.classList.remove('border-transparent', 'text-blue-300');
-            activeBtn.classList.add('border-white', 'text-white');
-        }
+  <!-- COMMUNITY -->
+  <section id="v-com" class="view hidden">
+    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+      <h2 class="font-bold mb-3">🌐 SciNexus Community Repository</h2>
+      <div id="com-list" class="space-y-3"></div>
+    </div>
+  </section>
+</main>
 
-        function signUp() {
-            const e = document.getElementById('email').value, p = document.getElementById('password').value;
-            if(!e || !p) return alert("ईमेल और पासवर्ड भरें।");
-            auth.createUserWithEmailAndPassword(e, p).catch(err => alert("एरर: " + err.message));
-        }
-        function login() {
-            const e = document.getElementById('email').value, p = document.getElementById('password').value;
-            if(!e || !p) return alert("ईमेल और पासवर्ड भरें।");
-            auth.signInWithEmailAndPassword(e, p).catch(err => alert("लॉगिन फेल: " + err.message));
-        }
-        function logout() { auth.signOut(); }
+<!-- LOGIN MODAL -->
+<div id="login-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+  <div class="bg-white max-w-sm w-full p-6 rounded-2xl space-y-2 relative">
+    <button onclick="closeLogin()" class="absolute top-3 right-4 text-slate-400 font-bold">✕</button>
+    <h3 class="font-bold text-lg">Login / Sign up</h3>
+    <input id="email" type="email" placeholder="Email" class="inp">
+    <input id="password" type="password" placeholder="Password (min 6)" class="inp">
+    <button onclick="emailAuth(false)" class="w-full bg-blue-600 text-white py-2.5 rounded-xl font-bold text-sm">Login</button>
+    <button onclick="emailAuth(true)" class="w-full bg-slate-100 py-2.5 rounded-xl font-bold text-sm">नया खाता बनाएं</button>
+    <div class="text-center text-xs text-slate-400">— या —</div>
+    <button onclick="social('google')" class="soc">Google</button>
+    <button onclick="social('github')" class="soc">GitHub</button>
+    <button onclick="social('orcid')" class="soc">ORCID</button>
+    <button onclick="anon()" class="soc">Anonymous (Guest)</button>
+  </div>
+</div>
 
-        // सख्त वैलिडेशन के साथ रिसर्च अपलोड
-        function submitNewResearch() {
-            const user = auth.currentUser;
-            if (!user) return;
+<style>
+.inp{width:100%;padding:.6rem;border:1px solid #cbd5e1;border-radius:.75rem;font-size:.875rem}
+.lb{display:block;font-size:.7rem;font-weight:700;color:#475569;margin-bottom:.25rem}
+.soc{width:100%;border:1px solid #cbd5e1;padding:.6rem;border-radius:.75rem;font-size:.875rem;font-weight:600}
+.bd{font-size:10px;font-weight:700;text-transform:uppercase;background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:4px}
+.bd2{font-size:10px;background:#f1f5f9;color:#475569;padding:1px 6px;border-radius:4px}
+.b1{background:#2563eb;color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;display:inline-block}
+.b2{background:#f1f5f9;color:#334155;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;display:inline-block}
+.b3{background:#fee2e2;color:#b91c1c;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700}
+</style>
 
-            const title = document.getElementById('sub-title').value.trim();
-            const authors = document.getElementById('sub-authors').value.trim();
-            const category = document.getElementById('sub-category').value;
-            const abstract = document.getElementById('sub-abstract').value.trim();
-            const link = document.getElementById('sub-link').value.trim();
+<script>
+/* ===== Firebase (आपका config) ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyC93VoM3Vq2hbnF9S6DojMJIMEtkUukU-g",
+  authDomain: "scinexus-1f5d1.firebaseapp.com",
+  projectId: "scinexus-1f5d1",
+  storageBucket: "scinexus-1f5d1.firebasestorage.app",
+  messagingSenderId: "701649637520",
+  appId: "1:701649637520:web:afae596028cbca4c884815",
+  measurementId: "G-3K4FM9LCH8"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(), db = firebase.firestore(), storage = firebase.storage();
+const TS = firebase.firestore.FieldValue.serverTimestamp;
 
-            if (!title || !authors || !abstract || !link) {
-                alert("कृपया सभी फील्ड (शीर्षक, लेखक, सारांश और लिंक) अनिवार्य रूप से भरें!");
-                return;
-            }
+/* ===== helpers ===== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const strip = h => (new DOMParser().parseFromString(String(h || ""), "text/html").body.textContent || "").trim();
+const safeUrl = u => /^https?:\/\//i.test(u || "") ? u : "";
+const enc = encodeURIComponent;
+const J = u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+const T = document.title;
+let user = null, unsubs = [], n = 0; const C = {};
+const reg = it => { const k = "k" + (n++); C[k] = it; return k; };
 
-            db.collection("papers").add({
-                userId: user.uid,
-                userEmail: user.email,
-                title: title,
-                authors: authors,
-                category: category,
-                abstract: abstract,
-                link: link,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                alert("रिसर्च सफलतापूर्वक पब्लिश हो गया है!");
-                document.getElementById('sub-title').value = '';
-                document.getElementById('sub-authors').value = '';
-                document.getElementById('sub-abstract').value = '';
-                document.getElementById('sub-link').value = '';
-                switchTab('library');
-            }).catch(err => alert("एरर: " + err.message));
-        }
+/* ===== navigation ===== */
+function go(v) {
+  if ((v === "lib" || v === "up") && !user) return openLogin();
+  document.querySelectorAll(".view").forEach(e => e.classList.add("hidden"));
+  $("v-" + v).classList.remove("hidden");
+  document.querySelectorAll("[data-nav]").forEach(b => b.classList.toggle("bg-blue-800", b.dataset.nav === v));
+  if (v !== "rec") { document.title = T; if (location.hash) history.replaceState(null, "", location.pathname + location.search); }
+  window.scrollTo(0, 0);
+}
+function openLogin() { $("login-modal").classList.remove("hidden"); }
+function closeLogin() { $("login-modal").classList.add("hidden"); }
+function need() { if (!user) { openLogin(); return false; } return true; }
 
-        // लाइब्रेरी लोड करना और क्लिक करने पर मॉडल खोलना
-        function loadMyPapers(uid) {
-            db.collection("papers").where("userId", "==", uid).onSnapshot(snapshot => {
-                const list = document.getElementById('my-papers-list');
-                list.innerHTML = "";
-                if (snapshot.empty) {
-                    list.innerHTML = `<p class="text-sm text-slate-400">आपकी लाइब्रेरी खाली है।</p>`;
-                    return;
-                }
-                snapshot.forEach(doc => {
-                    const p = doc.data();
-                    const safeData = encodeURIComponent(JSON.stringify(p));
-                    list.innerHTML += `
-                        <div class="p-4 border border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 transition cursor-pointer flex justify-between items-center" onclick="openModal('${safeData}')">
-                            <div>
-                                <span class="text-[10px] font-bold uppercase bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${p.category || 'Research'}</span>
-                                <h3 class="font-bold text-slate-900 mt-1">${p.title}</h3>
-                                <p class="text-xs text-slate-600 mt-0.5">लेखक: ${p.authors}</p>
-                            </div>
-                            <button onclick="event.stopPropagation(); deletePaper('${doc.id}')" class="text-xs text-red-500 hover:underline px-2 py-1">🗑️ हटाएं</button>
-                        </div>
-                    `;
-                });
-            });
-        }
+/* ===== auth ===== */
+auth.onAuthStateChanged(u => {
+  user = u;
+  $("login-btn").classList.toggle("hidden", !!u);
+  $("logout-btn").classList.toggle("hidden", !u);
+  $("who").textContent = u ? (u.email || u.displayName || "Guest") : "";
+  unsubs.forEach(f => f()); unsubs = [];
+  if (u) { closeLogin(); watchMine(); } else { $("lib-saved").innerHTML = ""; $("lib-mine").innerHTML = ""; }
+});
+function emailAuth(signup) {
+  const e = $("email").value.trim(), p = $("password").value;
+  if (!e || !p) return alert("ईमेल और पासवर्ड भरें।");
+  (signup ? auth.createUserWithEmailAndPassword(e, p) : auth.signInWithEmailAndPassword(e, p)).catch(x => alert(x.message));
+}
+const PROV = {
+  google: () => new firebase.auth.GoogleAuthProvider(),
+  github: () => new firebase.auth.GithubAuthProvider(),
+  orcid: () => new firebase.auth.OAuthProvider("oidc.orcid")
+};
+function social(name) { auth.signInWithPopup(PROV[name]()).catch(x => alert(x.message)); }
+function anon() { auth.signInAnonymously().catch(x => alert(x.message)); }
 
-        function deletePaper(docId) {
-            if (confirm("क्या आप इस पेपर को हटाना चाहते हैं?")) {
-                db.collection("papers").doc(docId).delete();
-            }
-        }
+/* ===== search sources (सभी CORS-friendly) ===== */
+function inv(o) { if (!o) return ""; const a = []; for (const [w, p] of Object.entries(o)) p.forEach(i => a[i] = w); return a.join(" "); }
+const rec = d => { const r = d.data(); return { internal: true, id: d.id, source: "SciNexus", title: r.title, authors: (r.authors || []).join(", "),
+  year: (r.pubDate || "").slice(0, 4), venue: "SciNexus Repository", abstract: r.description, doi: r.doi || "", url: "#rec=" + d.id,
+  pdf: r.fileUrl || "", type: r.type, license: r.license, kw: r.keywords || [], uid: r.uid, furl: r.fileUrl || "", ts: r.createdAt?.seconds || 0 }; };
+const SRC = {
+  scinexus: async q => {
+    const s = await db.collection("records").where("public", "==", true).limit(100).get(), t = q.toLowerCase();
+    return s.docs.map(rec).filter(r => (r.title + " " + r.authors + " " + r.abstract + " " + r.kw.join(" ")).toLowerCase().includes(t));
+  },
+  openalex: async q => (await J("https://api.openalex.org/works?per-page=10&search=" + enc(q))).results.map(w => ({
+    source: "OpenAlex", title: w.display_name, authors: w.authorships.slice(0, 8).map(a => a.author.display_name).join(", "),
+    year: w.publication_year, venue: w.primary_location?.source?.display_name || "", abstract: inv(w.abstract_inverted_index),
+    doi: (w.doi || "").replace("https://doi.org/", ""), url: w.doi || w.id, pdf: w.open_access?.oa_url || "", type: w.type })),
+  zenodo: async q => (await J("https://zenodo.org/api/records?size=10&q=" + enc(q))).hits.hits.map(h => ({
+    source: "Zenodo", title: h.metadata.title, authors: (h.metadata.creators || []).map(c => c.name).join(", "),
+    year: (h.metadata.publication_date || "").slice(0, 4), venue: "Zenodo", abstract: strip(h.metadata.description),
+    doi: h.doi || "", url: h.links.self_html, pdf: h.files?.[0]?.links?.self || "", type: h.metadata.resource_type?.title || "" })),
+  crossref: async q => (await J("https://api.crossref.org/works?rows=10&query=" + enc(q))).message.items.map(i => ({
+    source: "Crossref", title: strip((i.title || ["Untitled"])[0]), authors: (i.author || []).map(a => ((a.given || "") + " " + (a.family || "")).trim()).join(", "),
+    year: i.issued?.["date-parts"]?.[0]?.[0] || "", venue: (i["container-title"] || [""])[0], abstract: strip(i.abstract),
+    doi: i.DOI, url: "https://doi.org/" + i.DOI, pdf: "", type: i.type })),
+  europepmc: async q => ((await J("https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&resultType=core&pageSize=10&query=" + enc(q))).resultList?.result || []).map(r => ({
+    source: "EuropePMC", title: strip(r.title), authors: r.authorString || "", year: r.pubYear, venue: r.journalTitle || "",
+    abstract: strip(r.abstractText), doi: r.doi || "", url: `https://europepmc.org/article/${r.source}/${r.id}`, pdf: "", type: "Article" }))
+};
 
-        // कम्युनिटी फीड लोड करना
-        function loadCommunityPapers() {
-            db.collection("papers").limit(20).onSnapshot(snapshot => {
-                const list = document.getElementById('community-list');
-                list.innerHTML = "";
-                if (snapshot.empty) {
-                    list.innerHTML = `<p class="text-sm text-slate-400">कम्युनिटी में अभी कोई पेपर नहीं है।</p>`;
-                    return;
-                }
-                snapshot.forEach(doc => {
-                    const p = doc.data();
-                    const safeData = encodeURIComponent(JSON.stringify(p));
-                    list.innerHTML += `
-                        <div class="p-4 border border-slate-200 rounded-xl bg-white shadow-sm hover:shadow-md transition cursor-pointer" onclick="openModal('${safeData}')">
-                            <span class="text-[10px] font-bold uppercase bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">${p.category || 'Open Research'}</span>
-                            <h3 class="font-bold text-slate-900 mt-1.5">${p.title}</h3>
-                            <p class="text-xs text-slate-600 mt-1 line-clamp-2">${p.abstract || ''}</p>
-                            <div class="mt-2 text-[11px] text-slate-400">द्वारा: ${p.authors}</div>
-                        </div>
-                    `;
-                });
-            });
-        }
+async function search() {
+  const q = $("q").value.trim(); if (!q) return;
+  const f = $("srcf").value, names = f === "all" ? Object.keys(SRC) : [f];
+  $("res").innerHTML = '<p class="text-sm text-blue-600 animate-pulse">खोज जारी है…</p>';
+  const rs = await Promise.allSettled(names.map(x => SRC[x](q)));
+  const items = [], bad = [];
+  rs.forEach((r, i) => r.status === "fulfilled" ? items.push(...r.value) : bad.push(names[i]));
+  $("res").innerHTML = (bad.length ? `<p class="text-xs text-amber-600">ये स्रोत जवाब नहीं दे पाए: ${esc(bad.join(", "))}</p>` : "")
+    + (items.length ? items.map(i => card(i)).join("") : '<p class="text-sm text-slate-500">कोई परिणाम नहीं मिला।</p>');
+}
+$("q").addEventListener("keydown", e => e.key === "Enter" && search());
 
-        // पेपर डिटेल्स देखने के लिए पॉपअप मॉडल
-        function openModal(encodedData) {
-            const p = JSON.parse(decodeURIComponent(encodedData));
-            document.getElementById('modal-cat').innerText = p.category || 'Research';
-            document.getElementById('modal-title').innerText = p.title;
-            document.getElementById('modal-authors').innerText = "लेखक: " + p.authors;
-            document.getElementById('modal-abstract').innerText = p.abstract || "कोई सारांश उपलब्ध नहीं है।";
-            
-            const linkContainer = document.getElementById('modal-link-container');
-            if (p.link) {
-                linkContainer.innerHTML = `<a href="${p.link}" target="_blank" class="block w-full text-center bg-blue-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition">📄 ऑरिजिनल पेपर / PDF खोलें</a>`;
-            } else {
-                linkContainer.innerHTML = `<span class="text-xs text-slate-400">लिंक उपलब्ध नहीं है।</span>`;
-            }
-            document.getElementById('paper-modal').classList.remove('hidden');
-        }
+/* ===== cards & detail (सब कुछ साइट के अंदर) ===== */
+function card(it, extra) {
+  const k = reg(it), ab = it.abstract || "";
+  return `<div class="bg-white border rounded-xl p-4 shadow-sm">
+    <div class="flex flex-wrap gap-1 mb-1"><span class="bd">${esc(it.source)}</span>${it.type ? `<span class="bd2">${esc(it.type)}</span>` : ""}${it.year ? `<span class="bd2">${esc(it.year)}</span>` : ""}</div>
+    <h3 class="font-bold text-blue-900 cursor-pointer hover:underline" data-open="${k}">${esc(it.title)}</h3>
+    <p class="text-xs text-slate-500">${esc(it.authors)}</p>
+    <p class="text-xs mt-1 text-slate-700">${esc(ab.slice(0, 220))}${ab.length > 220 ? "…" : ""}</p>
+    <div class="flex gap-2 mt-2"><button data-open="${k}" class="b1">विवरण देखें</button>${extra ?? `<button data-save="${k}" class="b2">★ सेव</button>`}</div></div>`;
+}
+function showItem(it) {
+  go("rec");
+  const k = reg(it), cite = `${it.authors} (${it.year || "n.d."}). ${it.title}. ${it.venue || ""}.${it.doi ? " https://doi.org/" + it.doi : ""}`;
+  $("v-rec").innerHTML = `<button onclick="go('search')" class="b2 mb-3">← वापस</button>
+  <article class="bg-white border rounded-2xl p-5 shadow-sm space-y-3">
+    <div class="flex flex-wrap gap-1"><span class="bd">${esc(it.source)}</span>${it.type ? `<span class="bd2">${esc(it.type)}</span>` : ""}${it.year ? `<span class="bd2">${esc(it.year)}</span>` : ""}${it.license ? `<span class="bd2">${esc(it.license)}</span>` : ""}</div>
+    <h1 class="text-xl font-extrabold">${esc(it.title)}</h1>
+    <p class="text-sm text-slate-600">${esc(it.authors)}</p>
+    <p class="text-xs text-slate-500">${esc(it.venue)}${it.doi ? " · DOI: " + esc(it.doi) : ""}${it.cites != null ? " · Citations: " + esc(it.cites) : ""}</p>
+    <div class="bg-slate-50 border rounded-xl p-3 text-sm leading-relaxed whitespace-pre-line">${esc(it.abstract || "सारांश उपलब्ध नहीं है।")}</div>
+    ${it.kw && it.kw.length ? `<p class="text-xs">Keywords: ${esc(it.kw.join(", "))}</p>` : ""}
+    <div class="flex flex-wrap gap-2">
+      <button data-save="${k}" class="b1">★ सेव (My Library)</button>
+      ${safeUrl(it.pdf) ? `<a class="b2" href="${esc(it.pdf)}" target="_blank" rel="noopener noreferrer">📄 PDF / फ़ाइल</a>` : ""}
+      ${!it.internal && safeUrl(it.url) ? `<a class="b2" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">मूल स्रोत ↗</a>` : ""}
+      <button class="b2" data-cite="${esc(cite)}">📋 Citation कॉपी</button>
+    </div></article>`;
+  document.title = it.title + " – SciNexus";
+  let s = $("ld"); if (!s) { s = document.createElement("script"); s.id = "ld"; s.type = "application/ld+json"; document.head.appendChild(s); }
+  s.textContent = JSON.stringify({ "@context": "https://schema.org", "@type": "ScholarlyArticle", name: it.title, author: it.authors, datePublished: it.year, description: (it.abstract || "").slice(0, 300), identifier: it.doi });
+  document.querySelector("meta[name=description]").content = (it.abstract || it.title).slice(0, 160);
+  if (it.internal) history.replaceState(null, "", "#rec=" + it.id);
+}
+async function route() {
+  const m = location.hash.match(/^#rec=(\w+)/); if (!m) return;
+  try { const d = await db.collection("records").doc(m[1]).get(); if (d.exists) showItem(rec(d)); } catch (e) {}
+}
+window.addEventListener("hashchange", route);
 
-        function closeModal() {
-            document.getElementById('paper-modal').classList.add('hidden');
-        }
+/* ===== click handling ===== */
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-open],[data-save],[data-del],[data-delrec],[data-cite]"); if (!t) return;
+  const d = t.dataset;
+  if (d.open) showItem(C[d.open]);
+  if (d.cite) { try { await navigator.clipboard.writeText(d.cite); t.textContent = "कॉपी हुआ ✓"; } catch { prompt("Copy:", d.cite); } }
+  if (d.save) saveItem(C[d.save], t);
+  if (d.del && confirm("लाइब्रेरी से हटाएं?")) db.collection("users").doc(user.uid).collection("library").doc(d.del).delete();
+  if (d.delrec && confirm("यह रिकॉर्ड हमेशा के लिए हटाएं?")) {
+    if (d.furl) { try { await storage.refFromURL(d.furl).delete(); } catch {} }
+    db.collection("records").doc(d.delrec).delete();
+  }
+});
 
-        // फिक्स किया गया ग्लोबल सर्च (arXiv API)
-        async function searchResearch() {
-            const query = document.getElementById('search-query').value.trim();
-            const resultsDiv = document.getElementById('search-results');
-            if (!query) return alert("सर्च करने के लिए कीवर्ड लिखें।");
+/* ===== My Library (Firebase cloud) ===== */
+async function saveItem(it, btn) {
+  if (!need()) return;
+  const id = (it.source + "_" + (it.doi || it.url || it.title)).replace(/\W/g, "_").slice(0, 150);
+  try {
+    await db.collection("users").doc(user.uid).collection("library").doc(id).set({
+      source: it.source, title: it.title || "", authors: it.authors || "", year: String(it.year || ""), venue: it.venue || "",
+      abstract: (it.abstract || "").slice(0, 8000), doi: it.doi || "", url: it.url || "", pdf: it.pdf || "", type: it.type || "", savedAt: TS() });
+    btn.textContent = "सेव ✓";
+  } catch (x) { alert(x.message); }
+}
+function watchMine() {
+  const lib = db.collection("users").doc(user.uid).collection("library").orderBy("savedAt", "desc");
+  unsubs.push(lib.onSnapshot(s => {
+    $("lib-saved").innerHTML = s.empty ? '<p class="text-sm text-slate-400">अभी कुछ सेव नहीं है।</p>' : s.docs.map(d => card(d.data(), `<button class="b3" data-del="${esc(d.id)}">हटाएं</button>`)).join("");
+  }, x => alert(x.message)));
+  unsubs.push(db.collection("records").where("uid", "==", user.uid).onSnapshot(s => {
+    $("lib-mine").innerHTML = s.empty ? '<p class="text-sm text-slate-400">आपने अभी कुछ अपलोड नहीं किया।</p>'
+      : s.docs.map(d => { const r = rec(d); return card(r, `<button class="b3" data-delrec="${esc(d.id)}" data-furl="${esc(r.furl)}">हटाएं</button>`); }).join("");
+  }, x => alert(x.message)));
+}
 
-            resultsDiv.innerHTML = `<p class="text-sm text-blue-600 font-medium animate-pulse">ग्लोबल डेटाबेस से खोज जारी है...</p>`;
-            try {
-                const res = await fetch(`https://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(query)}&max_results=6`);
-                const text = await res.text();
-                const xml = new DOMParser().parseFromString(text, "text/xml");
-                const entries = xml.getElementsByTagName("entry");
+/* ===== Upload (Zenodo style; link ज़रूरी नहीं) ===== */
+async function publish() {
+  if (!need()) return;
+  const v = i => $(i).value.trim(), list = (s, re) => s.split(re).map(x => x.trim()).filter(Boolean);
+  const title = v("u-title"), authors = list(v("u-authors"), /[;,\n]+/), desc = v("u-desc"), f = $("u-file").files[0];
+  if (!title || !authors.length || !desc) return alert("Title, Authors और Description ज़रूरी हैं।");
+  if (f && f.size > 50 * 1024 * 1024) return alert("फ़ाइल 50MB से छोटी रखें।");
+  const btn = $("u-btn"); btn.disabled = true; btn.textContent = "अपलोड हो रहा है…";
+  const done = () => { btn.disabled = false; btn.textContent = "🚀 Publish"; };
+  let fileUrl = "";
+  try {
+    if (f) { const r = storage.ref(`records/${user.uid}/${Date.now()}_${f.name.replace(/[^\w.\-]/g, "_")}`); await r.put(f); fileUrl = await r.getDownloadURL(); }
+  } catch (x) { if (!confirm("फ़ाइल अपलोड नहीं हुई (" + x.message + "). बिना फ़ाइल के पब्लिश करें?")) return done(); }
+  try {
+    await db.collection("records").add({
+      uid: user.uid, title, authors, type: v("u-type"), pubDate: v("u-date") || new Date().toISOString().slice(0, 10),
+      description: desc, keywords: list(v("u-kw"), /,/), license: v("u-lic"), doi: v("u-doi"), fileUrl, public: $("u-pub").checked, createdAt: TS() });
+    ["u-title", "u-authors", "u-desc", "u-kw", "u-doi", "u-file"].forEach(i => $(i).value = "");
+    done(); go("lib");
+  } catch (x) { alert(x.message); done(); }
+}
 
-                resultsDiv.innerHTML = "";
-                if (entries.length === 0) {
-                    resultsDiv.innerHTML = `<p class="text-sm text-slate-500">कोई परिणाम नहीं मिला।</p>`;
-                    return;
-                }
+/* ===== Community feed (public) ===== */
+db.collection("records").where("public", "==", true).limit(30).onSnapshot(s => {
+  const items = s.docs.map(rec).sort((a, b) => b.ts - a.ts);
+  $("com-list").innerHTML = items.length ? items.map(i => card(i)).join("") : '<p class="text-sm text-slate-400">अभी कोई रिकॉर्ड नहीं है।</p>';
+}, () => { $("com-list").innerHTML = '<p class="text-sm text-red-500">Firestore rules जाँचें (नीचे दिए गए rules लगाएँ)।</p>'; });
 
-                for (let entry of entries) {
-                    const title = entry.getElementsByTagName("title")[0]?.textContent.trim().replace(/\n/g, ' ') || "Untitled";
-                    const summary = entry.getElementsByTagName("summary")[0]?.textContent.trim().replace(/\n/g, ' ') || "";
-                    const pdfLink = entry.getElementsByTagName("id")[0]?.textContent.trim() || "";
-                    const safeTitle = title.replace(/'/g, "").replace(/"/g, "");
-
-                    resultsDiv.innerHTML += `
-                        <div class="p-4 bg-white border border-slate-200 rounded-xl shadow-sm space-y-2">
-                            <h3 class="font-bold text-blue-900 text-sm">${title}</h3>
-                            <p class="text-xs text-slate-600 leading-relaxed">${summary.substring(0, 160)}...</p>
-                            <div class="flex gap-3 pt-1">
-                                <button onclick="saveFromSearch('${safeTitle}', '${pdfLink}', '${summary.replace(/'/g, "")}')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700">+ मेरी लाइब्रेरी में सेव करें</button>
-                                <a href="${pdfLink}" target="_blank" class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-200">🔗 मूल पेपर देखें</a>
-                            </div>
-                        </div>
-                    `;
-                }
-            } catch (e) {
-                resultsDiv.innerHTML = `<p class="text-sm text-red-500">सर्च करने में नेटवर्क एरर आई। कृपया दोबारा प्रयास करें।</p>`;
-            }
-        }
-
-        function saveFromSearch(title, link, abstract) {
-            const user = auth.currentUser;
-            if (!user) return;
-            db.collection("papers").add({
-                userId: user.uid,
-                userEmail: user.email,
-                title: title,
-                authors: "arXiv Global Repository",
-                category: "Global Literature",
-                abstract: abstract,
-                link: link,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => alert("पेपर आपकी 'मेरी लाइब्रेरी' में सफलतापूर्वक सेव हो गया है!"));
-        }
-    </script>
+go("search"); route();
+</script>
 </body>
 </html>
