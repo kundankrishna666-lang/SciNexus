@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SciNexus - Open Research Repository</title>
-    <!-- Tailwind CSS for styling -->
+    <title>SciNexus - Open Research Repository, Community & Journal</title>
+    <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Firebase Compat SDKs -->
@@ -12,51 +12,83 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen text-gray-800">
 
-    <!-- Header -->
-    <header class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center">
-        <h1 class="text-xl font-bold">🔬 SciNexus Hub</h1>
-        <div id="auth-status" class="text-sm font-medium">चेक हो रहा है...</div>
+    <!-- Header / Navbar -->
+    <header class="bg-blue-700 text-white p-4 shadow-md flex flex-wrap justify-between items-center">
+        <div>
+            <h1 class="text-xl font-extrabold tracking-wide">🔬 SciNexus Hub</h1>
+            <p class="text-xs text-blue-200">Zenodo & Journal Style Open Research Repository</p>
+        </div>
+        <div id="auth-status" class="text-sm font-medium bg-blue-800 px-3 py-1 rounded shadow-inner mt-2 sm:mt-0">चेक हो रहा है...</div>
     </header>
 
-    <main class="max-w-4xl mx-auto p-4 mt-6">
+    <main class="max-w-5xl mx-auto p-4 space-y-6 mt-2">
         
-        <!-- Login / Signup Section -->
-        <div id="auth-section" class="bg-white p-6 rounded-lg shadow-md mb-6">
-            <h2 class="text-lg font-semibold mb-4 text-gray-700">खाता बनाएं या लॉगिन करें</h2>
-            <input type="email" id="email" placeholder="अपना ईमेल दर्ज करें" class="w-full p-2 border rounded mb-3 text-sm">
-            <input type="password" id="password" placeholder="पासवर्ड दर्ज करें" class="w-full p-2 border rounded mb-4 text-sm">
-            <div class="flex flex-wrap gap-2">
-                <button onclick="signUp()" class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">साइन अप करें</button>
-                <button onclick="login()" class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600">लॉगिन करें</button>
-                <button onclick="logout()" id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded text-sm hidden hover:bg-red-600">लॉग आउट</button>
+        <!-- 1. Authentication Section -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h2 class="text-lg font-bold mb-3 text-blue-900 border-b pb-2">👤 यूज़र अकाउंट और ऑथेंटिकेशन</h2>
+            <div id="logged-out-view" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input type="email" id="email" placeholder="अपना ईमेल दर्ज करें" class="p-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="password" id="password" placeholder="पासवर्ड दर्ज करें" class="p-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="flex gap-2 pt-1">
+                    <button onclick="signUp()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">खाता बनाएं (Sign Up)</button>
+                    <button onclick="login()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition">लॉगिन करें (Login)</button>
+                </div>
             </div>
-        </div>
+            <div id="logged-in-view" class="hidden flex justify-between items-center bg-green-50 p-3 rounded-lg border border-green-200">
+                <p class="text-sm text-green-800 font-medium">✨ आप अपने रिसर्च अकाउंट से सुरक्षित रूप से लॉग इन हैं।</p>
+                <button onclick="logout()" class="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-600 transition">लॉग आउट करें</button>
+            </div>
+        </section>
 
-        <!-- My Library Section -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-lg font-semibold mb-4 text-gray-700">📚 मेरी लाइब्रेरी (My Cloud Library)</h2>
+        <!-- 2. Global Research Search Section -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h2 class="text-lg font-bold mb-3 text-blue-900 border-b pb-2">🔍 ग्लोबल रिसर्च और डेटाबेस खोज (arXiv & OpenAlex)</h2>
+            <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                <input type="text" id="search-query" placeholder="विषय या शीर्षक दर्ज करें (जैसे: Artificial Intelligence, Quantum Mechanics)..." class="w-full p-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                <button onclick="searchResearch()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition whitespace-nowrap">सर्च करें</button>
+            </div>
+            <div id="search-results" class="space-y-3">
+                <p class="text-gray-400 text-sm italic">रिसर्च पेपर्स खोजने के लिए ऊपर कीवर्ड टाइप करें...</p>
+            </div>
+        </section>
+
+        <!-- 3. My Cloud Library & Repository Section -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h2 class="text-lg font-bold mb-3 text-blue-900 border-b pb-2">📚 मेरी क्लाउड लाइब्रेरी और कम्युनिटी सबमिशन (My Library)</h2>
             
-            <!-- Paper Add Form -->
-            <div class="mb-4 p-4 bg-gray-50 rounded border">
-                <h3 class="font-medium text-sm mb-2 text-gray-600">नया रिसर्च पेपर जोड़ें</h3>
-                <input type="text" id="paper-title" placeholder="पेपर का टाइटल (Title)" class="w-full p-2 border rounded mb-2 text-sm">
-                <input type="text" id="paper-authors" placeholder="लेखक (Authors)" class="w-full p-2 border rounded mb-2 text-sm">
-                <button onclick="savePaper()" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">लाइब्रेरी में सेव करें</button>
+            <!-- Manual Paper/Dataset Submit Form -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-gray-500 mb-3">नया रिसर्च पेपर या डेटासेट सबमिट करें</h3>
+                <div class="space-y-3">
+                    <input type="text" id="paper-title" placeholder="पेपर का शीर्षक (Title)" class="w-full p-2.5 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="text" id="paper-authors" placeholder="लेखक / कम्युनिटी सदस्य (Authors)" class="w-full p-2.5 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    <button onclick="savePaper()" class="bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-800 transition">लाइब्रेरी में पब्लिश/सेव करें</button>
+                </div>
             </div>
 
             <!-- Saved Papers List -->
-            <div id="papers-list" class="space-y-2">
-                <p class="text-gray-500 text-sm">पेपर्स लोड हो रहे हैं...</p>
+            <div>
+                <h3 class="font-bold text-sm text-gray-700 mb-3">आपके सेव किए गए पेपर्स:</h3>
+                <div id="papers-list" class="space-y-2">
+                    <p class="text-gray-400 text-sm italic">लाइब्रेरी लोड हो रही है...</p>
+                </div>
             </div>
-        </div>
+        </section>
 
     </main>
 
-    <!-- Firebase Configuration & Logic Script -->
+    <!-- Footer -->
+    <footer class="text-center p-4 text-xs text-gray-500 mt-6 border-t bg-white">
+        &copy; 2026 SciNexus Open Research Hub. All rights reserved.
+    </footer>
+
+    <!-- Firebase & Core Logic Script -->
     <script>
-        // आपका असली Firebase Config (जो आपने भेजा है)
+        // आपका असली Firebase कॉन्फ़िगरेशन
         const firebaseConfig = {
             apiKey: "AIzaSyC93VoM3Vq2hbnF9S6DojMJIMEtkUukU-g",
             authDomain: "scinexus-1f5d1.firebaseapp.com",
@@ -67,116 +99,154 @@
             measurementId: "G-3K4FM9LCH8"
         };
 
-        // Firebase Initialize करें
+        // Firebase को इनिशियलाइज करें
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // UI Elements
         const authStatus = document.getElementById('auth-status');
-        const logoutBtn = document.getElementById('logout-btn');
+        const loggedOutView = document.getElementById('logged-out-view');
+        const loggedInView = document.getElementById('logged-in-view');
         const papersList = document.getElementById('papers-list');
 
-        // Auth State Monitor (देखें कि यूज़र लॉगिन है या नहीं)
+        // यूज़र के लॉगिन स्टेट को ट्रैक करना
         auth.onAuthStateChanged((user) => {
             if (user) {
-                authStatus.innerText = `लॉगिन हैं: ${user.email}`;
-                logoutBtn.classList.remove('hidden');
+                authStatus.innerText = user.email;
+                loggedOutView.classList.add('hidden');
+                loggedInView.classList.remove('hidden');
                 loadMyPapers(user.uid);
             } else {
                 authStatus.innerText = "लॉगिन नहीं हैं";
-                logoutBtn.classList.add('hidden');
-                papersList.innerHTML = `<p class="text-red-500 text-sm">कृपया ऊपर अपने अकाउंट से लॉगिन करें ताकि आपकी लाइब्रेरी दिख सके।</p>`;
+                loggedOutView.classList.remove('hidden');
+                loggedInView.classList.add('hidden');
+                papersList.innerHTML = `<p class="text-red-500 text-sm">कृपया अपनी पर्सनल क्लाउड लाइब्रेरी देखने के लिए ऊपर लॉगिन करें।</p>`;
             }
         });
 
-        // Sign Up Function
+        // Sign Up फंक्शन
         function signUp() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            if(!email || !password) {
-                alert("कृपया ईमेल और पासवर्ड भरें।");
-                return;
-            }
+            if(!email || !password) return alert("कृपया ईमेल और पासवर्ड दोनों भरें।");
             auth.createUserWithEmailAndPassword(email, password)
-                .then(() => alert("खाता सफलतापूर्वक बन गया और लॉगिन हो गए!"))
+                .then(() => alert("सफलतापूर्वक खाता बन गया और आप लॉग इन हो गए!"))
                 .catch((err) => alert("एरर: " + err.message));
         }
 
-        // Login Function
+        // Login फंक्शन
         function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            if(!email || !password) {
-                alert("कृपया ईमेल और पासवर्ड भरें।");
-                return;
-            }
+            if(!email || !password) return alert("कृपया ईमेल और पासवर्ड दोनों भरें।");
             auth.signInWithEmailAndPassword(email, password)
                 .then(() => alert("लॉगिन सफल रहा!"))
                 .catch((err) => alert("लॉगिन फेल: " + err.message));
         }
 
-        // Logout Function
+        // Logout फंक्शन
         function logout() {
-            auth.signOut().then(() => alert(" सफलतापूर्वक लॉग आउट हो गए हैं।"));
+            auth.signOut().then(() => alert("सफलतापूर्वक लॉग आउट हो गए हैं।"));
         }
 
-        // Save Paper to Firestore Cloud Database
+        // क्लाउड डेटाबेस में पेपर सेव करना
         function savePaper() {
             const user = auth.currentUser;
-            if (!user) {
-                alert("कृपया पहले लॉगिन करें!");
-                return;
-            }
+            if (!user) return alert("पेपर सेव करने के लिए पहले लॉगिन करें!");
 
             const title = document.getElementById('paper-title').value;
             const authors = document.getElementById('paper-authors').value;
 
-            if (!title) {
-                alert("कृपया पेपर का टाइटल लिखें।");
-                return;
-            }
+            if (!title) return alert("कृपया पेपर का शीर्षक (Title) लिखें।");
 
             db.collection("papers").add({
                 userId: user.uid,
                 title: title,
-                authors: authors,
+                authors: authors || "स्वयं (Self)",
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             })
             .then(() => {
-                alert("पेपर आपकी क्लाउड लाइब्रेरी में सेव हो गया!");
+                alert("पेपर सफलतापूर्वक आपकी क्लाउड लाइब्रेरी में सेव हो गया है!");
                 document.getElementById('paper-title').value = '';
                 document.getElementById('paper-authors').value = '';
-                loadMyPapers(user.uid);
             })
-            .catch((err) => alert("सेव करने में एरर: " + err.message));
+            .catch((err) => alert("सेव करने में एरर आई: " + err.message));
         }
 
-        // Load Saved Papers from Firestore Cloud Database
+        // क्लाउड डेटाबेस से पेपर्स लोड करना
         function loadMyPapers(uid) {
             db.collection("papers")
               .where("userId", "==", uid)
               .onSnapshot((snapshot) => {
                 papersList.innerHTML = "";
                 if (snapshot.empty) {
-                    papersList.innerHTML = `<p class="text-gray-500 text-sm">आपकी लाइब्रेरी अभी खाली है। ऊपर फॉर्म से पेपर जोड़ें।</p>`;
+                    papersList.innerHTML = `<p class="text-gray-400 text-sm italic">आपकी लाइब्रेरी अभी खाली है। ऊपर फॉर्म से नया पेपर जोड़ें।</p>`;
                     return;
                 }
                 snapshot.forEach((doc) => {
                     const paper = doc.data();
                     papersList.innerHTML += `
-                        <div class="p-3 bg-gray-50 border rounded flex justify-between items-center shadow-sm">
+                        <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-lg flex justify-between items-center text-sm shadow-sm hover:bg-gray-100 transition">
                             <div>
-                                <h4 class="font-bold text-sm text-blue-900">${paper.title}</h4>
-                                <p class="text-xs text-gray-600">लेखक: ${paper.authors || 'अज्ञात'}</p>
+                                <h4 class="font-bold text-blue-900">${paper.title}</h4>
+                                <p class="text-xs text-gray-600 mt-0.5">लेखक: ${paper.authors}</p>
                             </div>
                         </div>
                     `;
                 });
-            }, (error) => {
-                console.error("Error loading papers:", error);
-                papersList.innerHTML = `<p class="text-red-500 text-sm">डेटा लोड करने में समस्या आई। सुनिश्चित करें कि Firestore Database इनेबल है।</p>`;
             });
+        }
+
+        // arXiv API से ग्लोबल रिसर्च सर्च करना
+        async function searchResearch() {
+            const query = document.getElementById('search-query').value;
+            const resultsDiv = document.getElementById('search-results');
+            if(!query) return alert("सर्च करने के लिए कृपया कोई विषय या कीवर्ड लिखें।");
+
+            resultsDiv.innerHTML = `<p class="text-blue-600 text-sm animate-pulse">ग्लोबल डेटाबेस से खोज जारी है...</p>`;
+            
+            try {
+                const response = await fetch(`https://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(query)}&max_results=4`);
+                const textData = await response.text();
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(textData, "text/xml");
+                const entries = xml.getElementsByTagName("entry");
+
+                resultsDiv.innerHTML = "";
+                if(entries.length === 0) {
+                    resultsDiv.innerHTML = `<p class="text-gray-500 text-sm">इस विषय पर कोई रिसर्च पेपर नहीं मिला।</p>`;
+                    return;
+                }
+
+                for (let entry of entries) {
+                    const title = entry.getElementsByTagName("title")[0]?.textContent.trim().replace(/\n/g, ' ') || "शीर्षक उपलब्ध नहीं";
+                    const summary = entry.getElementsByTagName("summary")[0]?.textContent.trim().substring(0, 140) + "..." || "";
+                    
+                    resultsDiv.innerHTML += `
+                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm space-y-2 hover:shadow transition">
+                            <h4 class="font-bold text-blue-900">${title}</h4>
+                            <p class="text-xs text-gray-600 leading-relaxed">${summary}</p>
+                            <button onclick="saveSearchedPaper('${title.replace(/'/g, "")}')" class="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-green-700 transition">📥 मेरी लाइब्रेरी में जोड़ें</button>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                resultsDiv.innerHTML = `<p class="text-red-500 text-sm">सर्च करने में नेटवर्क या एपीआई एरर आई है।</p>`;
+            }
+        }
+
+        // सर्च किए गए पेपर को डायरेक्ट लाइब्रेरी में जोड़ने का शॉर्टकट
+        function saveSearchedPaper(title) {
+            const user = auth.currentUser;
+            if (!user) return alert("कृपया पहले अपने अकाउंट से लॉगिन करें!");
+
+            db.collection("papers").add({
+                userId: user.uid,
+                title: title,
+                authors: "arXiv Global Repository",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => alert("यह रिसर्च पेपर सफलतापूर्वक आपकी क्लाउड लाइब्रेरी में जोड़ दिया गया है!"));
         }
     </script>
 </body>
