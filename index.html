@@ -188,5 +188,41 @@ boot();
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
+</script><!-- यहाँ लॉगिन और साइन-अप का आसान फॉर्म और कोड है -->
+<div style="margin: 20px; padding: 20px; background: #f9f9f9; border-radius: 8px; text-align: center;">
+  <h3>SciNexus - User Login</h3>
+  <input type="email" id="user-email" placeholder="Enter Email" style="padding: 8px; width: 250px; margin-bottom: 10px;"><br>
+  <input type="password" id="user-password" placeholder="Enter Password" style="padding: 8px; width: 250px; margin-bottom: 10px;"><br>
+  <button onclick="signUpUser()" style="padding: 8px 15px; background: #007bff; color: white; border: none; cursor: pointer;">Sign Up</button>
+  <button onclick="loginUser()" style="padding: 8px 15px; background: #28a745; color: white; border: none; cursor: pointer; margin-left: 10px;">Login</button>
+</div>
+
+<script>
+  // नया अकाउंट बनाने के लिए
+  function signUpUser() {
+    const email = document.getElementById('user-email').value;
+    const password = document.getElementById('user-password').value;
+    firebase.auth().createUserWithEmailAndPassword(email, password)
+      .then((res) => {
+        alert("सफलतापूर्वक अकाउंट बन गया!");
+      })
+      .catch((err) => {
+        alert("Error: " + err.message);
+      });
+  }
+
+  // लॉगिन करने के लिए
+  function loginUser() {
+    const email = document.getElementById('user-email').value;
+    const password = document.getElementById('user-password').value;
+    firebase.auth().signInWithEmailAndPassword(email, password)
+      .then((res) => {
+        alert("लॉगिन सफल रहा!");
+      })
+      .catch((err) => {
+        alert("Login Error: " + err.message);
+      });
+  }
 </script>
+
 </body></html>
