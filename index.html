@@ -337,5 +337,330 @@ db.collection("records").where("public", "==", true).limit(30).onSnapshot(s => {
 
 go("search"); route();
 </script>
+</body><!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>सत्य भारत | Know About Bharat</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<script>tailwind.config={darkMode:'class'}</script>
+<style>body{font-family:'Noto Sans Devanagari',system-ui,sans-serif}.bar{height:4px;background:linear-gradient(90deg,#FF671F,#fff,#046A38)}</style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+<div class="bar"></div>
+<header class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-2">
+  <div>
+    <h1 class="text-xl font-bold">🇮🇳 सत्य भारत <span class="text-sm font-normal text-slate-500">Know About Bharat</span></h1>
+    <p class="text-xs text-slate-500">खोजें • स्रोत देखें • सरल भाषा में समझें</p>
+  </div>
+  <div class="flex gap-2">
+    <button onclick="document.documentElement.classList.toggle('dark')" class="px-3 py-1.5 rounded-lg border text-sm" title="डार्क/लाइट">🌓</button>
+    <button onclick="fs()" class="px-3 py-1.5 rounded-lg border text-sm" title="अक्षर बड़े करें">A+</button>
+  </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-4 pb-16 space-y-6">
+
+<section class="bg-white dark:bg-slate-900 rounded-2xl p-5 border dark:border-slate-800">
+  <h2 class="font-bold mb-2">🔎 खोजें</h2>
+  <div class="flex gap-2">
+    <input id="q" placeholder="अपना सवाल या शक यहाँ लिखें…" class="flex-1 min-w-0 px-3 py-2 rounded-xl border dark:bg-slate-800 dark:border-slate-700" onkeydown="if(event.key==='Enter')doSearch()">
+    <button onclick="doSearch()" class="px-4 py-2 rounded-xl bg-orange-600 text-white font-semibold">खोजें</button>
+  </div>
+  <p class="text-[11px] text-slate-500 mt-1">कुछ भी पूछें, अपनी भाषा में। AI जवाब स्रोतों के साथ ऊपर आएगा; नीचे विकिपीडिया, शोध-पत्र और आधिकारिक लिंक।</p>
+  <div id="official" class="mt-3 flex flex-wrap gap-2 text-xs"></div>
+</section>
+
+<section id="out" class="space-y-5">
+  <div id="aiAns"></div>
+  <div id="ans"></div>
+  <div>
+    <h2 class="font-bold text-sm mb-2">📌 चुने हुए रिकॉर्ड (आधिकारिक लिंक के साथ)</h2>
+    <div id="rLocal" class="grid md:grid-cols-2 gap-3"></div>
+  </div>
+  <div><h2 class="font-bold text-sm mb-2">📖 सामान्य जानकारी (विकिपीडिया) <span class="font-normal text-xs text-slate-500">— आँकड़े आधिकारिक स्रोत से मिलाएँ</span></h2><div id="rWiki" class="grid md:grid-cols-2 gap-3"><p class="text-xs text-slate-500">खोज करने पर यहाँ नतीजे आएँगे।</p></div></div>
+  <div><h2 class="font-bold text-sm mb-2">🔬 Zenodo शोध-पत्र <span class="font-normal text-xs text-slate-500">— खुला विज्ञान भंडार (CERN)</span></h2><div id="rZen" class="grid md:grid-cols-2 gap-3"><p class="text-xs text-slate-500">खोज करने पर यहाँ नतीजे आएँगे।</p></div></div>
+</section>
+
+<section class="bg-white dark:bg-slate-900 rounded-2xl p-5 border-2 border-emerald-500/40">
+  <h2 class="font-bold mb-1">🧩 टेक्स्ट को आसान बनाएँ और जाँच-सूची पाएँ</h2>
+  <p class="text-xs text-slate-500 mb-2">किसी भी पेपर, खबर या दावे का अंश चिपकाएँ। यह टूल आपके ब्राउज़र में ही चलता है, कुछ बाहर नहीं भेजता।</p>
+  <textarea id="tx" rows="5" placeholder="यहाँ टेक्स्ट पेस्ट करें..." class="w-full px-3 py-2 rounded-xl border dark:bg-slate-800 dark:border-slate-700 text-sm"></textarea>
+  <div class="flex flex-wrap gap-2 mt-2 text-sm">
+    <button onclick="tool('s')" class="px-3 py-2 rounded-xl bg-purple-700 text-white">🧩 हिस्सों में बाँटें</button>
+    <button onclick="tool('c')" class="px-3 py-2 rounded-xl bg-emerald-700 text-white">✅ जाँच-सूची बनाएँ</button>
+    <button onclick="aiTool('verify')" class="px-3 py-2 rounded-xl bg-blue-900 text-white">🤖 AI से सही/गलत जाँचें</button>
+    <button onclick="aiTool('simplify')" class="px-3 py-2 rounded-xl bg-blue-700 text-white">🤖 AI से आसान भाषा</button>
+  </div>
+  <div id="tOut" class="mt-3 text-sm leading-relaxed"></div>
+</section>
+
+<section class="bg-white dark:bg-slate-900 rounded-2xl p-5 border dark:border-slate-800">
+  <h2 class="font-bold mb-2">🛡️ लिंक भरोसेमंद है या नहीं?</h2>
+  <div class="flex gap-2">
+    <input id="url" placeholder="https://..." class="flex-1 min-w-0 px-3 py-2 rounded-xl border dark:bg-slate-800 dark:border-slate-700 text-sm" onkeydown="if(event.key==='Enter')checkURL()">
+    <button onclick="checkURL()" class="px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-slate-700">जाँचें</button>
+  </div>
+  <div id="urlOut" class="mt-3 text-sm"></div>
+</section>
+
+<footer class="text-center text-xs text-slate-500">सत्य भारत • कोई कुकी या ट्रैकिंग नहीं • पूरी जाँच के लिए हमेशा मूल स्रोत खोलें</footer>
+</main>
+
+<!-- In-site viewer -->
+<div id="modal" class="fixed inset-0 z-50 hidden bg-black/70 p-2 sm:p-6 flex items-center justify-center" onclick="if(event.target===this)closeM()">
+  <div class="bg-white dark:bg-slate-900 w-full max-w-3xl max-h-[92vh] rounded-2xl flex flex-col overflow-hidden">
+    <div class="p-4 border-b dark:border-slate-700 flex justify-between gap-3">
+      <div class="min-w-0"><span id="mBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800"></span>
+        <h3 id="mTitle" class="font-bold mt-1 leading-snug"></h3><p id="mSub" class="text-xs text-slate-500"></p></div>
+      <button onclick="closeM()" class="shrink-0 w-9 h-9 rounded-lg bg-slate-200 dark:bg-slate-800" aria-label="बंद करें">✕</button>
+    </div>
+    <div class="p-4 overflow-y-auto space-y-4 text-sm leading-relaxed">
+      <div id="mBody"></div>
+      <div id="mSimple"></div>
+      <div id="mCite" class="hidden">
+        <div class="flex justify-between items-center mb-1"><b class="text-xs">उद्धरण (Citation)</b><button onclick="copyCite()" class="text-xs px-2 py-1 rounded bg-blue-900 text-white">कॉपी</button></div>
+        <textarea id="mCiteTx" readonly rows="3" class="w-full p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs"></textarea>
+      </div>
+    </div>
+    <div class="p-3 border-t dark:border-slate-700 flex flex-wrap gap-2 justify-between items-center text-xs">
+      <div class="flex gap-2"><button onclick="simplifyModal()" class="px-3 py-1.5 rounded-lg bg-purple-700 text-white">🧩 हिस्सों में समझें</button>
+      <a id="mLink" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-emerald-700 text-white">मूल स्रोत ↗</a></div>
+      <span id="mNote" class="text-slate-500"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* अपना Cloudflare Worker लिंक यहाँ डालें (worker.js देखें). API key कभी यहाँ न डालें. */
+const AI_ENDPOINT="";
+const TRUSTED=["gov.in","nic.in","ac.in","edu.in","zenodo.org","rbi.org.in","isro.gov.in","data.gov.in","pib.gov.in","who.int","un.org","worldbank.org","imf.org","nature.com","science.org","arxiv.org","doi.org","wikipedia.org"];
+const SHORT=["bit.ly","tinyurl.com","t.co","goo.gl","cutt.ly","is.gd"];
+
+/* चुने हुए रिकॉर्ड: सिर्फ़ ऐसे तथ्य जो व्यापक रूप से प्रमाणित हैं + आधिकारिक लिंक। आँकड़े जोड़ने से पहले स्रोत से मिलाएँ। */
+const RECORDS=[
+ {id:"l1",t:"चंद्रयान-3: चंद्रमा के दक्षिणी ध्रुव के पास सॉफ्ट लैंडिंग",tag:"विज्ञान",src:"ISRO",url:"https://www.isro.gov.in/",
+  s:"23 अगस्त 2023 को विक्रम लैंडर चंद्रमा के दक्षिणी ध्रुव के पास उतरा। भारत ऐसा करने वाला पहला देश बना। लैंडिंग स्थल को 'शिव शक्ति पॉइंट' नाम दिया गया।",
+  facts:[["तारीख","23 अगस्त 2023"],["लैंडर / रोवर","विक्रम / प्रज्ञान"],["संस्था","ISRO"]]},
+ {id:"l2",t:"भारत का संविधान",tag:"इतिहास",src:"भारत सरकार (विधि मंत्रालय)",url:"https://legislative.gov.in/constitution-of-india/",
+  s:"संविधान सभा ने 26 नवंबर 1949 को संविधान अपनाया और यह 26 जनवरी 1950 से लागू हुआ। इसी दिन भारत गणराज्य बना।",
+  facts:[["अंगीकार","26 नवंबर 1949"],["लागू","26 जनवरी 1950"]]},
+ {id:"l3",t:"जनगणना: जनसंख्या के आधिकारिक आँकड़े",tag:"शासन",src:"Census of India",url:"https://censusindia.gov.in/",
+  s:"जनगणना हर दस साल में होती है। राज्य, जिला और गाँव स्तर के आधिकारिक आँकड़े जनगणना पोर्टल पर मिलते हैं।",
+  facts:[["जारी करने वाली संस्था","भारत के महापंजीयक का कार्यालय"],["अंतराल","10 वर्ष"]]},
+ {id:"l4",t:"ओपन गवर्नमेंट डेटा प्लेटफ़ॉर्म इंडिया",tag:"डेटा",src:"data.gov.in",url:"https://data.gov.in/",
+  s:"मंत्रालयों और विभागों के डेटासेट यहाँ मुफ़्त डाउनलोड के लिए रखे जाते हैं। खेती, स्वास्थ्य, शिक्षा, मौसम जैसे विषय मिलते हैं।",
+  facts:[["प्रकार","सरकारी खुला डेटा"],["लागत","निःशुल्क"]]},
+ {id:"l5",t:"भूजल की स्थिति",tag:"पर्यावरण",src:"केंद्रीय भूजल बोर्ड (CGWB)",url:"https://cgwb.gov.in/",
+  s:"भूजल के दोहन और पुनर्भरण का राज्यवार आकलन केंद्रीय भूजल बोर्ड की रिपोर्टों में मिलता है।",
+  facts:[["संस्था","CGWB"],["रिपोर्ट","राज्य/जिला स्तर आकलन"]]},
+ {id:"l6",t:"UPI और डिजिटल भुगतान",tag:"अर्थव्यवस्था",src:"NPCI",url:"https://www.npci.org.in/",
+  s:"UPI भारत का तुरंत भुगतान तंत्र है। मासिक लेन-देन के ताज़ा आँकड़े NPCI की वेबसाइट पर हर महीने अपडेट होते हैं।",
+  facts:[["संचालक","NPCI"],["आँकड़े","मासिक, NPCI वेबसाइट"]]}
+];
+const store={};RECORDS.forEach(r=>store[r.id]=r);
+let cur=null;
+
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+const strip=h=>String(h||"").replace(/<[^>]*>/g,"").replace(/&quot;/g,'"').replace(/&amp;/g,"&").replace(/&#039;/g,"'").replace(/\s+/g," ").trim();
+let fsz=0;function fs(){fsz=(fsz+1)%3;document.documentElement.style.fontSize=["100%","110%","120%"][fsz]}
+
+function card(it,badge,color){
+  return `<article onclick="openItem('${it.id}')" class="cursor-pointer p-4 rounded-xl border bg-white dark:bg-slate-900 dark:border-slate-700 hover:border-orange-500 transition">
+  <div class="text-[11px] flex justify-between mb-1 gap-2"><span class="px-2 py-0.5 rounded-full ${color}">${badge}</span><span class="text-slate-500 truncate">${esc(it.src||"")}</span></div>
+  <h3 class="font-bold text-sm mb-1">${esc(it.t)}</h3>
+  <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-3">${esc(it.s||"")}</p>
+  <span class="inline-block mt-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">यहीं खोलें →</span></article>`;
+}
+function renderLocal(q){
+  const low=q.toLowerCase();
+  const list=q?RECORDS.filter(r=>(r.t+r.s+r.tag+r.src).toLowerCase().includes(low)):RECORDS;
+  $("rLocal").innerHTML=list.length?list.map(r=>card(r,esc(r.tag),"bg-orange-100 text-orange-800")).join(""):`<p class="text-xs text-slate-500">इस शब्द पर कोई चुना रिकॉर्ड नहीं है। नीचे के नतीजे और आधिकारिक लिंक देखें।</p>`;
+}
+renderLocal("");
+
+const STOP=new Set("कौन क्या कब कहाँ कहां किसने कैसे कितना कितनी कितने क्यों किस है हैं था थी थे हुआ हुई हुए होता होती होते का की के को में से पर और या बताओ बताइए बताएं बताये मुझे जी एक यह वह ये वो who what when where which how why is are was were the of in on a an tell me about does did".split(" "));
+const INTENT={birth:/जन्म|पैदा|born|birth|उम्र|age/i,death:/मृत्यु|निधन|मरे|died|death/i};
+function parseQ(q){
+  const raw=q.replace(/[?؟।!,.]/g," ").split(/\s+/).filter(Boolean);
+  const intent=raw.some(w=>INTENT.birth.test(w))?"birth":raw.some(w=>INTENT.death.test(w))?"death":"";
+  const subj=raw.filter(w=>!STOP.has(w.toLowerCase())&&!INTENT.birth.test(w)&&!INTENT.death.test(w)).join(" ")||q;
+  return {subj,intent};
+}
+async function callAI(task,text){
+  const r=await fetch(AI_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},referrerPolicy:"no-referrer",body:JSON.stringify({task,text})});
+  const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||"AI error");return d;
+}
+function aiHTML(d,title){
+  const src=(d.sources||[]).filter(x=>/^https?:\/\//.test(x.url)).slice(0,6);
+  return `<div class="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border-2 border-blue-500/40">
+   <div class="text-[11px] font-bold text-blue-800 dark:text-blue-300 mb-1">🤖 ${title}</div>
+   <p class="leading-relaxed whitespace-pre-line">${esc(d.answer||"जवाब नहीं मिला।")}</p>
+   ${src.length?`<div class="mt-2 text-xs"><b>स्रोत:</b> ${src.map(x=>`<a class="underline text-blue-700 dark:text-blue-400 mr-2" target="_blank" rel="noopener noreferrer" href="${esc(x.url)}">${esc(x.title||x.url)} ↗</a>`).join("")}</div>`:""}
+   <p class="text-[11px] text-slate-500 mt-2">AI गलती कर सकता है। ज़रूरी बातें स्रोत खोलकर जाँचें।</p></div>`;
+}
+async function askAI(q){
+  const box=$("aiAns");if(!AI_ENDPOINT){box.innerHTML="";return;}
+  box.innerHTML=`<p class="text-xs text-slate-500">🤖 AI जवाब तैयार कर रहा है…</p>`;
+  try{box.innerHTML=aiHTML(await callAI("ask",q),"AI जवाब (वेब-स्रोतों के साथ)");}
+  catch(e){box.innerHTML=`<p class="text-xs text-amber-700">AI अभी उपलब्ध नहीं। नीचे के नतीजे देखें।</p>`;}
+}
+async function aiTool(task){
+  const t=$("tx").value.trim(),o=$("tOut");
+  if(!t){o.innerHTML=`<p class="text-xs text-slate-500">पहले टेक्स्ट डालें।</p>`;return;}
+  if(!AI_ENDPOINT){o.innerHTML=`<p class="text-xs text-amber-700">AI अभी जुड़ा नहीं है (AI_ENDPOINT खाली)। ऊपर के दो बटन बिना AI चलते हैं।</p>`;return;}
+  o.innerHTML=`<p class="text-xs text-slate-500">🤖 AI काम कर रहा है…</p>`;
+  try{o.innerHTML=aiHTML(await callAI(task,t),task==="verify"?"AI जाँच रिपोर्ट":"आसान भाषा में");}
+  catch(e){o.innerHTML=`<p class="text-xs text-amber-700">AI अभी उपलब्ध नहीं।</p>`;}
+}
+function doSearch(){
+  const q=$("q").value.trim();if(!q)return;
+  const {subj,intent}=parseQ(q),e=encodeURIComponent(q);
+  $("official").innerHTML=[["Google पर पूरा वेब","https://www.google.com/search?q="+e],["DuckDuckGo","https://duckduckgo.com/?q="+e],["YouTube","https://www.youtube.com/results?search_query="+e],["सरकारी साइट्स","https://www.google.com/search?q="+e+"+site:gov.in"],["data.gov.in","https://data.gov.in/search?title="+encodeURIComponent(subj)],["Google Scholar","https://scholar.google.com/scholar?q="+encodeURIComponent(subj)]]
+   .map(([n,u])=>`<a target="_blank" rel="noopener noreferrer" href="${u}" class="px-3 py-1.5 rounded-full border dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">${n} ↗</a>`).join("");
+  askAI(q);renderLocal(subj);wiki(subj,intent);zenodo(subj);
+}
+async function wsearch(lang,q){
+  const u=`https://${lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrlimit=5&prop=extracts|pageimages&exintro=1&explaintext=1&exsentences=4&exlimit=max&piprop=thumbnail&pithumbsize=160&format=json&origin=*`;
+  const r=await fetch(u);if(!r.ok)throw 0;const d=await r.json();
+  return Object.values(d.query?.pages||{}).sort((a,b)=>a.index-b.index).map(p=>({title:p.title,ext:(p.extract||"").trim(),img:p.thumbnail?.source,lang}));
+}
+function pick(ext,intent){
+  const sents=ext.replace(/\s+/g," ").split(/(?<=[।.!?])\s+/);
+  const paren=ext.match(/\(([^)]*(?:जन्म|born|b\.)[^)]*)\)/i);
+  if(intent==="birth"){const s=sents.find(x=>/जन्म|born/i.test(x));if(paren)return "जन्म: "+paren[1].replace(/^\s*(जन्म|born)\s*[:\-]?\s*/i,"").trim()+(s?"\n\n"+s:"");if(s)return s;}
+  if(intent==="death"){const s=sents.find(x=>/मृत्यु|निधन|died|death/i.test(x));if(s)return s;}
+  return sents.slice(0,2).join(" ");
+}
+async function wiki(subj,intent){
+  const box=$("rWiki"),ans=$("ans");box.innerHTML=`<p class="text-xs text-slate-500">खोज रहा है…</p>`;ans.innerHTML="";
+  let res=[];
+  try{res=await wsearch("hi",subj);}catch(e){}
+  if(res.length<2){try{const en=await wsearch("en",subj);res=res.concat(en);}catch(e){}}
+  res=res.filter(x=>x.ext);
+  if(!res.length){box.innerHTML=`<p class="text-xs text-slate-500">इस शब्द पर सामान्य जानकारी नहीं मिली। शब्द बदलकर या ऊपर के "Google पर पूरा वेब" से खोजें।</p>`;ans.innerHTML=`<div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 text-sm">सीधा जवाब नहीं मिला। यह साइट अभी विश्वकोश (Wikipedia) और शोध-पत्रों से जवाब लाती है; ताज़ा खबर, मौसम, भाव जैसी चीज़ों के लिए ऊपर के खोज-लिंक इस्तेमाल करें।</div>`;return;}
+  res.forEach((h,i)=>{store["w"+i]={id:"w"+i,kind:"wiki",t:h.title,s:h.ext,lang:h.lang,img:h.img,src:h.lang==="hi"?"hi.wikipedia.org":"en.wikipedia.org"};});
+  const top=res[0],vague=top.ext.length<110||/(को संदर्भित|may refer to|disambiguation|कई अर्थ|अर्थ हो सकते)/i.test(top.ext);
+  ans.innerHTML=`<div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border-2 border-emerald-500/50">
+   <div class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">⚡ सीधा जवाब — ${esc(top.title)}</div>
+   <p class="text-base leading-relaxed whitespace-pre-line">${esc(pick(top.ext,intent))}</p>
+   ${vague?`<p class="text-xs text-amber-700 dark:text-amber-400 mt-2">⚠️ इस शब्द के कई अर्थ हो सकते हैं। नीचे के नतीजों में सही वाला चुनें।</p>`:""}
+   <div class="mt-2 flex flex-wrap gap-3 text-xs"><button class="font-semibold text-blue-700 dark:text-blue-400" onclick="openItem('w0')">पूरा सारांश इसी पेज पर खोलें →</button><span class="text-slate-500">स्रोत: विकिपीडिया — महत्वपूर्ण बात दूसरे स्रोत से भी मिलाएँ</span></div></div>`;
+  box.innerHTML=res.map((h,i)=>`<article onclick="openItem('w${i}')" class="cursor-pointer p-3 rounded-xl border bg-white dark:bg-slate-900 dark:border-slate-700 hover:border-orange-500 transition flex gap-3">
+    ${h.img?`<img src="${esc(h.img)}" alt="" loading="lazy" class="w-16 h-16 object-cover rounded-lg shrink-0">`:""}
+    <div class="min-w-0"><div class="text-[11px] text-slate-500">${h.lang==="hi"?"हिंदी विकिपीडिया":"English Wikipedia"}</div>
+    <h3 class="font-bold text-sm">${esc(h.title)}</h3><p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-3">${esc(h.ext)}</p></div></article>`).join("");
+}
+async function zenodo(q){
+  const box=$("rZen");box.innerHTML=`<p class="text-xs text-slate-500">खोज रहा है…</p>`;
+  try{
+    const r=await fetch(`https://zenodo.org/api/records?q=${encodeURIComponent(q)}&size=6`);
+    if(!r.ok)throw 0;const d=await r.json();const hits=d.hits?.hits||[];
+    if(!hits.length){box.innerHTML=`<p class="text-xs text-slate-500">Zenodo पर कुछ नहीं मिला। अंग्रेज़ी शब्द से भी खोजें (जैसे: groundwater India)।</p>`;return;}
+    box.innerHTML=hits.map((h,i)=>{const m=h.metadata||{};const id="z"+i;
+      store[id]={id,kind:"zen",hit:h,t:m.title||"(शीर्षक नहीं)",s:strip(m.description).slice(0,260),src:(m.creators||[]).slice(0,2).map(c=>c.name).join(", ")};
+      return card(store[id],"Zenodo","bg-purple-100 text-purple-800");}).join("");
+  }catch(e){box.innerHTML=`<p class="text-xs text-amber-700">Zenodo से संपर्क नहीं हो सका। नेटवर्क जाँचकर दोबारा खोजें।</p>`;}
+}
+
+/* ====== IN-SITE VIEWER ====== */
+function showM(o){
+  cur=o;$("mSimple").innerHTML="";
+  $("mBadge").textContent=o.badge;$("mTitle").textContent=o.title;$("mSub").textContent=o.sub||"";
+  $("mBody").innerHTML=o.body;$("mLink").href=o.link;$("mNote").textContent=o.note||"";
+  $("mCiteTx").value=o.cite||"";$("mCite").classList.toggle("hidden",!o.cite);
+  $("modal").classList.remove("hidden");document.body.style.overflow="hidden";
+}
+function closeM(){$("modal").classList.add("hidden");document.body.style.overflow=""}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeM()});
+const today=()=>new Date().toLocaleDateString("hi-IN");
+
+async function openItem(id){
+  const it=store[id];if(!it)return;
+  if(!it.kind){ // चुना हुआ रिकॉर्ड
+    showM({badge:it.tag,title:it.t,sub:it.src,link:it.url,text:it.s,
+      body:`<p>${esc(it.s)}</p><table class="mt-3 w-full text-xs border dark:border-slate-700">${it.facts.map(f=>`<tr class="border-b dark:border-slate-700"><td class="p-2 font-semibold w-1/3 bg-slate-50 dark:bg-slate-800">${esc(f[0])}</td><td class="p-2">${esc(f[1])}</td></tr>`).join("")}</table>`,
+      cite:`${it.src}. ${it.t}. ${it.url} (देखा गया: ${today()})`,note:"आधिकारिक स्रोत पर नवीनतम आँकड़े ज़रूर देखें।"});
+  }else if(it.kind==="zen"){
+    const h=it.hit,m=h.metadata||{};
+    const au=(m.creators||[]).map(c=>c.name).join("; ")||"—";
+    const files=(h.files||[]).slice(0,5).map(f=>`<li>${esc(f.key)} <span class="text-slate-500">(${Math.round((f.size||0)/1024)} KB)</span></li>`).join("");
+    const doi=h.doi||m.doi||"";const lic=m.license?.id||"—";
+    const link=h.links?.self_html||h.links?.html||("https://zenodo.org/records/"+h.id);
+    const desc=strip(m.description);
+    showM({badge:"Zenodo शोध-पत्र",title:it.t,sub:`${au} • ${m.publication_date||""}`,link,text:desc,
+      body:`<p>${esc(desc)||"विवरण उपलब्ध नहीं।"}</p>
+      <table class="mt-3 w-full text-xs border dark:border-slate-700">
+       <tr class="border-b dark:border-slate-700"><td class="p-2 font-semibold w-1/3 bg-slate-50 dark:bg-slate-800">DOI</td><td class="p-2 break-all">${esc(doi||"—")}</td></tr>
+       <tr class="border-b dark:border-slate-700"><td class="p-2 font-semibold bg-slate-50 dark:bg-slate-800">लाइसेंस</td><td class="p-2">${esc(lic)}</td></tr>
+       <tr><td class="p-2 font-semibold bg-slate-50 dark:bg-slate-800">प्रकार</td><td class="p-2">${esc(m.resource_type?.title||"—")}</td></tr></table>
+      ${files?`<p class="mt-3 text-xs font-bold">फ़ाइलें:</p><ul class="text-xs list-disc ml-5">${files}</ul><p class="text-[11px] text-slate-500 mt-1">फ़ाइल डाउनलोड के लिए "मूल स्रोत" खोलें।</p>`:""}`,
+      cite:`${au} (${(m.publication_date||"").slice(0,4)}). ${it.t}. Zenodo. ${doi?("https://doi.org/"+doi):link}`,note:"पीयर-रिव्यू की गारंटी नहीं — Zenodo पर कोई भी अपलोड कर सकता है।"});
+  }else{
+    showM({badge:"विकिपीडिया",title:it.t,sub:"लोड हो रहा है…",link:"https://"+(it.lang||"hi")+".wikipedia.org/wiki/"+encodeURIComponent(it.t.replace(/ /g,"_")),text:it.s,body:`<p>${esc(it.s)}</p>`});
+    try{
+      const r=await fetch("https://"+(it.lang||"hi")+".wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(it.t.replace(/ /g,"_")));
+      if(!r.ok)throw 0;const d=await r.json();
+      const link=d.content_urls?.desktop?.page||cur.link;
+      showM({badge:"विकिपीडिया",title:d.title||it.t,sub:d.description||"सामान्य जानकारी",link,text:d.extract||"",
+        body:`<p>${esc(d.extract||"सारांश उपलब्ध नहीं।")}</p>`,
+        cite:`विकिपीडिया योगदानकर्ता. "${d.title||it.t}". ${link} (देखा गया: ${today()})`,
+        note:"विकिपीडिया कोई आधिकारिक स्रोत नहीं है; महत्वपूर्ण आँकड़े सरकारी स्रोत से मिलाएँ।"});
+    }catch(e){$("mBody").innerHTML=`<p class="text-amber-700">सारांश लोड नहीं हो सका। "मूल स्रोत" से पूरा लेख खोलें।</p>`;}
+  }
+}
+function copyCite(){
+  const t=$("mCiteTx").value;
+  if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{$("mCiteTx").select();});else{$("mCiteTx").select();}
+  $("mNote").textContent="उद्धरण कॉपी हुआ।";
+}
+function simplifyModal(){if(cur&&cur.text)$("mSimple").innerHTML=structure(cur.text);else $("mSimple").innerHTML=`<p class="text-xs text-slate-500">समझाने के लिए टेक्स्ट उपलब्ध नहीं है।</p>`}
+
+/* ====== टेक्स्ट टूल (ब्राउज़र में, बिना सर्वर) ====== */
+const sentences=t=>t.replace(/\s+/g," ").split(/(?<=[।.!?])\s+/).filter(s=>s.length>3);
+function structure(text){
+  const S=sentences(text);if(!S.length)return `<p class="text-xs text-slate-500">टेक्स्ट बहुत छोटा है।</p>`;
+  const nums=[...new Set(text.match(/\d[\d,.]*\s?(%|करोड़|लाख|मिलियन|बिलियन|million|billion)?/g)||[])].slice(0,8);
+  return `<div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900">
+   <p class="font-bold">📌 मुख्य बात</p><p>${esc(S[0])}</p>
+   ${S.length>1?`<p class="font-bold mt-2">📋 बाकी बिंदु</p><ol class="list-decimal ml-5 text-xs">${S.slice(1,7).map(s=>`<li>${esc(s)}</li>`).join("")}</ol>`:""}
+   ${nums.length?`<p class="font-bold mt-2">🔢 इन आँकड़ों को स्रोत से मिलाएँ</p><p class="text-xs">${nums.map(esc).join(" • ")}</p>`:""}
+   <p class="text-[11px] text-slate-500 mt-2">यह सरल नियमों से बना सारांश है, मूल पाठ की जगह नहीं।</p></div>`;
+}
+function tool(m){
+  const t=$("tx").value.trim();if(!t){$("tOut").innerHTML=`<p class="text-xs text-slate-500">पहले टेक्स्ट डालें।</p>`;return;}
+  if(m==="s"){$("tOut").innerHTML=structure(t);return;}
+  const nums=[...new Set(t.match(/\d[\d,.]*/g)||[])];
+  const strong=/(100%|हमेशा|कभी नहीं|सबसे बड़ा|पहली बार|गारंटी|guaranteed|always|never)/i.test(t);
+  const q=encodeURIComponent(sentences(t)[0]?.slice(0,90)||t.slice(0,90));
+  $("tOut").innerHTML=`<div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 space-y-1">
+   <p class="font-bold">✅ जाँच-सूची</p>
+   <p class="text-xs">${nums.length?`• ${nums.length} आँकड़े मिले (${nums.slice(0,6).map(esc).join(", ")}) — हर आँकड़े का स्रोत और साल खोजें।`:"• कोई आँकड़ा नहीं मिला — दावे का स्रोत माँगें।"}</p>
+   ${strong?`<p class="text-xs">• ⚠️ "हमेशा/कभी नहीं/पहली बार" जैसे बड़े शब्द हैं — इनकी अलग से पुष्टि करें।</p>`:""}
+   <p class="text-xs">• प्रकाशन तिथि और लेखक/संस्था देखें।</p>
+   <p class="text-xs">• आधिकारिक स्रोत खोजें: <a class="underline text-emerald-700" target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?q=${q}+site:gov.in">gov.in पर खोजें ↗</a> • <a class="underline text-emerald-700" target="_blank" rel="noopener noreferrer" href="https://data.gov.in/search?title=${q}">data.gov.in ↗</a></p>
+   <p class="text-[11px] text-slate-500">यह टूल सही/गलत का फ़ैसला नहीं करता — सिर्फ़ जाँचने का रास्ता दिखाता है।</p></div>`;
+}
+
+/* ====== लिंक जाँच ====== */
+function checkURL(){
+  const v=$("url").value.trim(),out=$("urlOut");if(!v){out.textContent="";return;}
+  let u;try{u=new URL(/^https?:\/\//i.test(v)?v:"https://"+v)}catch(e){out.innerHTML=`<span class="text-red-600">❌ यह सही लिंक नहीं है।</span>`;return;}
+  const h=u.hostname.toLowerCase(),ok=TRUSTED.find(d=>h===d||h.endsWith("."+d)),n=[];
+  if(u.protocol!=="https:")n.push("HTTPS नहीं है");
+  if(SHORT.includes(h))n.push("छोटा लिंक — असली पता छिपा है");
+  if(/^\d+\.\d+\.\d+\.\d+$/.test(h))n.push("सीधा IP पता");
+  if(h.includes("xn--"))n.push("नकली-जैसे अक्षरों वाला डोमेन हो सकता है");
+  if(/gov-in|govt-in|gov\.in\./.test(h)&&!ok)n.push("नाम सरकारी जैसा है, पर डोमेन सरकारी नहीं");
+  const verdict=ok&&!n.length?`<b class="text-emerald-700">✅ जाना-पहचाना भरोसेमंद डोमेन (${esc(ok)})</b>`:ok?`<b class="text-amber-600">⚠️ डोमेन सूची में है, पर नीचे की बातें देखें</b>`:`<b class="text-amber-600">⚠️ अज्ञात स्रोत — पुष्टि ज़रूरी</b>`;
+  out.innerHTML=`${verdict}<br><span class="text-xs text-slate-500">${esc(h)}</span>${n.length?`<ul class="text-xs mt-1 list-disc ml-5">${n.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}<p class="text-[11px] text-slate-500 mt-1">यह सिर्फ़ डोमेन की जाँच है, पेज की सामग्री की नहीं।</p>`;
+}
+</script>
 </body>
+</html>
+
 </html>
